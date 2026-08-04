@@ -6,6 +6,10 @@
 
 body{
 
+    margin:0;
+    padding:20px;
+    box-sizing:border-box;
+    
     font-family:'Pretendard',sans-serif;
 
     background:#f3f3f3;
@@ -16,7 +20,7 @@ body{
 
     align-items:center;
 
-    width:100vw;
+    width:100%;
 
     min-height:100vh;
 
@@ -38,7 +42,9 @@ body{
 
 .card{
 
-    width:min(92vw,700px);
+    width:92%;
+
+    max-width:420px;
 
     background:white;
 
