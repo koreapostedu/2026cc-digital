@@ -1,0 +1,212 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Malgun Gothic',sans-serif;
+}
+
+body{
+    background:#f5f5f5;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
+
+.container{
+
+    width:min(95vw,700px);
+
+    background:white;
+
+    border-radius:25px;
+
+    padding:45px;
+
+    text-align:center;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.15);
+
+}
+
+.logo{
+
+    width:240px;
+
+    margin-bottom:15px;
+
+}
+
+h1{
+
+    font-size:48px;
+
+    margin-bottom:20px;
+
+}
+
+.sub{
+
+    font-size:28px;
+
+    line-height:1.4;
+
+    margin-bottom:18px;
+
+}
+
+.guide{
+
+    font-size:26px;
+
+    margin-bottom:25px;
+
+}
+
+hr{
+
+    margin:30px 0;
+
+    border:none;
+
+    border-top:3px solid #666;
+
+}
+
+.menu{
+
+    width:100%;
+
+    background:#f79b1e;
+
+    color:white;
+
+    border:none;
+
+    border-radius:60px;
+
+    padding:24px;
+
+    font-size:30px;
+
+    font-weight:bold;
+
+    margin:18px 0;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.menu:hover{
+
+    background:#ea8800;
+
+    transform:scale(1.02);
+
+}
+
+.office{
+
+    width:260px;
+
+    margin-top:20px;
+
+}
+
+/* 태블릿 */
+
+@media(max-width:1024px){
+
+.container{
+
+width:98vw;
+
+padding:35px;
+
+}
+
+h1{
+
+font-size:42px;
+
+}
+
+.sub{
+
+font-size:24px;
+
+}
+
+.guide{
+
+font-size:24px;
+
+}
+
+.menu{
+
+font-size:28px;
+
+padding:22px;
+
+}
+
+.office{
+
+width:220px;
+
+}
+
+}
+
+/* 휴대폰 */
+
+@media(max-width:700px){
+
+.container{
+
+width:100%;
+
+min-height:100vh;
+
+border-radius:0;
+
+padding:20px;
+
+}
+
+h1{
+
+font-size:34px;
+
+}
+
+.sub{
+
+font-size:20px;
+
+}
+
+.guide{
+
+font-size:20px;
+
+}
+
+.menu{
+
+font-size:22px;
+
+padding:18px;
+
+}
+
+.office{
+
+width:180px;
+
+}
+
+}
