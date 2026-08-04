@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우체국 ATM 시뮬레이터</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange-main: #E8820C;
+            --orange-light: #F5A030;
+            --orange-dark: #C06808;
+            --btn-text: #2D5A3D;
+            --red-btn: #D63030;
+            --blue-btn: #1E6FBF;
+            --screen-bg: #ECEEF8;
+            --text-dark: #3A3A4A;
+            --text-mid: #5A5A6A;
+            --accent-line: #CC5500;
+        }
+        * { box-sizing:border-box; margin:0; padding:0; font-family:'Noto Sans KR',sans-serif; -webkit-user-select:none; user-select:none; }
+        body { background:#3A3A3A; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+
+        /* ── ATM 외곽 프레임 ── */
+        .atm-frame {
+            width:100%; max-width:420px; height:100vh; max-height:860px;
+            display:flex; flex-direction:column; overflow:hidden; position:relative;
+            box-shadow:0 0 0 6px #1A1A1A, 0 16px 48px rgba(0,0,0,0.7); border-radius:4px;
+        }
+        @media (min-height:861px) and (min-width:421px) { .atm-frame { border-radius:6px; height:860px; } }
+
+        /* ── 헤더: 주황 라인 + 로고 이미지 ── */
+        .atm-header {
+            background:var(--screen-bg);
+            border-top:4px solid var(--accent-line);
+            padding:8px 14px 6px;
+            display:flex; align-items:center; flex-shrink:0;
+            min-height:52px;
+        }
+        .atm-header img {
+            height:36px; width:auto; object-fit:contain;
+        }
+        .logo-divider {
+            flex:1; height:1.5px;
+            background:linear-gradient(90deg,#CC5500 0%,#E8820C 40%,transparent 100%);
+            margin-left:12px; align-self:center;
+        }
+
+        /* ── 화면 본체 ── */
+        .atm-screen {
+            flex:1; background:var(--screen-bg); position:relative;
+            overflow:hidden; display:flex; flex-direction:column;
+        }
+        .atm-screen::before {
+            content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
+            background:
+                radial-gradient(ellipse at 60% 40%, rgba(200,190,240,0.25) 0%, transparent 65%),
+                radial-gradient(ellipse at 30% 70%, rgba(180,220,255,0.15) 0%, transparent 50%);
+        }
+
+        /* ── View 시스템 ── */
+        .view { display:none; flex-direction:column; width:100%; height:100%; position:relative; z-index:1; }
+        .view.active { display:flex; }
+
+        /* ── 콘텐츠 영역 ── */
+        .screen-content {
+            flex:1; display:flex; flex-direction:column; justify-content:center; padding:24px 20px 16px;
+        }
+        .screen-content.top-align { justify-content:flex-start; padding-top:28px; }
+
+        .atm-big-text { font-size:34px; font-weight:900; color:var(--text-dark); line-height:1.35; letter-spacing:-0.5px; }
+        .atm-sub-text { font-size:17px; font-weight:700; color:var(--text-mid); margin-top:10px; line-height:1.5; }
+        .atm-notice-box { background:rgba(255,255,255,0.65); border:1.5px solid rgba(200,200,220,0.8); border-radius:6px; padding:14px 16px; margin-top:16px; }
+        .atm-notice-box p { font-size:14px; color:var(--text-mid); line-height:1.7; }
+
+        /* ── 하단 버튼 영역 ── */
+        .screen-btns { flex-shrink:0; padding:0 12px 12px; display:flex; flex-direction:column; gap:8px; }
+        .screen-btns.row { flex-direction:row; }
+
+        .atm-btn {
+            height:68px; border-radius:6px; border:none; cursor:pointer;
+            font-size:26px; font-weight:900; letter-spacing:1px;
+            display:flex; align-items:center; justify-content:center;
+            transition:filter .06s, transform .06s;
+        }
+        .atm-btn:active { filter:brightness(0.88); transform:scale(0.985); }
+
+        .btn-orange {
+            background:linear-gradient(180deg,#F5A030 0%,#E8820C 50%,#D06A08 100%);
+            color:var(--btn-text);
+            box-shadow:inset 0 2px 4px rgba(255,255,255,0.35), 0 4px 0 #A05008, 0 5px 6px rgba(0,0,0,0.25);
+        }
+        .btn-orange:active { box-shadow:inset 0 3px 6px rgba(0,0,0,0.2), 0 1px 0 #A05008; }
+
+        .btn-red {
+            background:linear-gradient(180deg,#E85050 0%,#D63030 50%,#B82020 100%);
+            color:white;
+            box-shadow:inset 0 2px 4px rgba(255,255,255,0.2), 0 4px 0 #881515, 0 5px 6px rgba(0,0,0,0.25);
+        }
+        .btn-red:active { box-shadow:inset 0 3px 6px rgba(0,0,0,0.3), 0 1px 0 #881515; }
+
+        .btn-blue {
+            background:linear-gradient(180deg,#4090D8 0%,#1E6FBF 50%,#155099 100%);
+            color:white;
+            box-shadow:inset 0 2px 4px rgba(255,255,255,0.2), 0 4px 0 #0E3870, 0 5px 6px rgba(0,0,0,0.25);
+        }
+        .btn-blue:active { box-shadow:inset 0 3px 6px rgba(0,0,0,0.3), 0 1px 0 #0E3870; }
+
+        .btn-gray {
+            background:linear-gradient(180deg,#9AA0B0 0%,#7A8090 50%,#606878 100%);
+            color:white;
+            box-shadow:inset 0 2px 4px rgba(255,255,255,0.2), 0 4px 0 #404858, 0 5px 6px rgba(0,0,0,0.25);
+        }
+
+        /* ── 2×2 메뉴 그리드 ── */
+        .menu-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:10px 12px; flex:1; }
+        .menu-btn {
+            background:linear-gradient(180deg,#F5A030 0%,#E8820C 55%,#C86A08 100%);
+            color:var(--btn-text); border:none; border-radius:8px;
+            font-size:30px; font-weight:900; letter-spacing:1px; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+            box-shadow:inset 0 3px 5px rgba(255,255,255,0.35), 0 5px 0 #A05008, 0 6px 8px rgba(0,0,0,0.25);
+            transition:filter .06s, transform .06s;
+        }
+        .menu-btn:active { filter:brightness(0.87); transform:scale(0.982); box-shadow:inset 0 4px 8px rgba(0,0,0,0.2), 0 1px 0 #A05008; }
+
+        /* ════════════════════════════════════════
+           PIN 스타일 공통 키패드
+           (비밀번호 화면 + 금액입력 화면 + 계좌입력 화면 공용)
+        ════════════════════════════════════════ */
+        .pin-info-area {
+            flex:1; display:flex; flex-direction:column;
+            justify-content:center; align-items:center;
+            padding:16px 20px 8px; text-align:center;
+        }
+        .pin-dots-row {
+            display:flex; gap:18px; margin:18px 0 10px;
+        }
+        .pin-dot {
+            width:22px; height:22px; border-radius:50%;
+            border:3px solid #9AA0B0; background:transparent;
+            transition:background .12s, border-color .12s, transform .1s;
+        }
+        .pin-dot.on {
+            background:var(--orange-main); border-color:var(--orange-dark);
+            box-shadow:0 0 8px rgba(232,130,12,0.5); transform:scale(1.2);
+        }
+
+        /* 금액/계좌 입력 시 표시 박스 */
+        .pin-value-display {
+            width:100%; max-width:320px;
+            border:2.5px solid var(--blue-btn); border-radius:8px;
+            padding:10px 16px; font-size:26px; font-weight:900;
+            text-align:right; background:rgba(255,255,255,0.85);
+            color:var(--text-dark); letter-spacing:1px; min-height:52px;
+            margin:10px 0 4px;
+        }
+
+        /* 키패드 외부 틀 */
+        .pin-keypad-shell {
+            background:linear-gradient(180deg,#1E293B 0%,#0F172A 100%);
+            border-top:4px solid #0A0C14;
+            padding:12px 14px 16px; flex-shrink:0;
+            display:flex; flex-direction:column; gap:9px;
+        }
+        /* 숫자 그리드 3열 */
+        .pin-num-grid {
+            display:grid; grid-template-columns:repeat(3,1fr); gap:9px;
+        }
+        /* 공통 키 */
+        .pin-key {
+            height:60px; border-radius:50%; border:none; cursor:pointer;
+            font-weight:900; display:flex; flex-direction:column;
+            align-items:center; justify-content:center; line-height:1;
+            transition:filter .05s, transform .05s;
+        }
+        .pin-key:active { filter:brightness(0.8); transform:translateY(3px) scale(0.95); }
+
+        /* 숫자 키 — 흰/회색 원형 */
+        .pk-num {
+            background:linear-gradient(180deg,#DDE2EC 0%,#BEC5D2 55%,#9AA2B2 100%);
+            color:#1C2030; font-size:26px;
+            box-shadow:inset 0 2px 3px rgba(255,255,255,0.9), 0 5px 0 #606878, 0 6px 5px rgba(0,0,0,0.4);
+        }
+        .pk-num:active { box-shadow:inset 0 3px 6px rgba(0,0,0,0.25), 0 2px 0 #606878; }
+        .pk-num .pk-sub { font-size:9px; font-weight:700; color:#606878; letter-spacing:1px; margin-top:2px; }
+
+        /* 정정 키 — 노란 원형 */
+        .pk-clear {
+            background:linear-gradient(180deg,#FFDB50 0%,#F0B800 55%,#CC9800 100%);
+            color:#2A1A00; font-size:16px;
+            box-shadow:inset 0 2px 3px rgba(255,255,255,0.7), 0 5px 0 #8A6800, 0 6px 5px rgba(0,0,0,0.4);
+        }
+        .pk-clear:active { box-shadow:inset 0 3px 6px rgba(0,0,0,0.2), 0 2px 0 #8A6800; }
+
+        /* 취소 키 — 빨간 원형 */
+        .pk-cancel {
+            background:linear-gradient(180deg,#F07070 0%,#D83030 55%,#B81818 100%);
+            color:white; font-size:16px;
+            box-shadow:inset 0 2px 3px rgba(255,255,255,0.2), 0 5px 0 #780A0A, 0 6px 5px rgba(0,0,0,0.4);
+        }
+        .pk-cancel:active { box-shadow:inset 0 3px 6px rgba(0,0,0,0.3), 0 2px 0 #780A0A; }
+
+        /* 확인 버튼 — 가로 전체, 파란색 직사각형 */
+        .pin-confirm-btn {
+            width:100%; height:56px; border-radius:10px; border:none; cursor:pointer;
+            font-size:20px; font-weight:900; letter-spacing:2px;
+            background:linear-gradient(180deg,#50A8F0 0%,#1E6FBF 55%,#105099 100%);
+            color:white;
+            box-shadow:inset 0 2px 3px rgba(255,255,255,0.2), 0 5px 0 #083870, 0 6px 5px rgba(0,0,0,0.4);
+            transition:filter .05s, transform .05s;
+        }
+        .pin-confirm-btn:active { filter:brightness(0.85); transform:translateY(3px); box-shadow:inset 0 3px 6px rgba(0,0,0,0.3), 0 2px 0 #083870; }
+
+        /* ── 확인 내역 테이블 ── */
+        .confirm-table { width:100%; margin-top:16px; border-top:2px solid rgba(180,180,200,0.5); padding-top:12px; }
+        .confirm-row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid rgba(180,180,200,0.3); font-size:16px; font-weight:700; }
+        .confirm-row .label { color:var(--text-mid); }
+        .confirm-row .value { color:var(--text-dark); text-align:right; }
+        .confirm-row .value.big { font-size:20px; color:var(--red-btn); font-weight:900; }
+        .confirm-row .value.blue { color:var(--blue-btn); }
+
+        /* ── 로딩 스피너 ── */
+        .spinner { width:52px; height:52px; border:6px solid rgba(180,180,200,0.4); border-top:6px solid var(--blue-btn); border-radius:50%; animation:spin .9s linear infinite; margin:24px auto 0; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        .complete-icon { font-size:56px; text-align:center; margin-bottom:12px; }
+
+        /* ── 다른업무보기 전체 메뉴 화면 ── */
+        .other-menu-wrap {
+            flex:1; display:flex; flex-direction:row; padding:6px; gap:6px; overflow:hidden;
+        }
+        /* 좌측/우측 세로 버튼 열 */
+        .other-col {
+            display:flex; flex-direction:column; gap:5px; width:88px; flex-shrink:0;
+        }
+        /* 중앙 광고/안내 영역 */
+        .other-center {
+            flex:1; display:flex; flex-direction:column; gap:6px;
+        }
+        .other-ad-box {
+            flex:1; background:rgba(255,255,255,0.75);
+            border:1.5px solid rgba(200,200,220,0.9); border-radius:8px;
+            padding:10px 12px; display:flex; flex-direction:column;
+            align-items:center; justify-content:center; text-align:center; gap:6px;
+        }
+        .other-ad-title {
+            font-size:14px; font-weight:900; color:#1E6FBF; line-height:1.3;
+        }
+        .other-ad-title span { color:#E8820C; }
+        .other-ad-banks {
+            display:flex; flex-wrap:wrap; justify-content:center;
+            gap:3px; margin-top:4px;
+        }
+        .bank-chip {
+            font-size:9px; font-weight:700; padding:2px 5px;
+            border-radius:3px; border:1px solid #CBD5E0; color:#4A5568;
+            background:white;
+        }
+        .other-ad-note {
+            font-size:9px; color:#999; margin-top:2px;
+        }
+        .other-bottom-info {
+            background:rgba(255,255,255,0.6); border-radius:6px;
+            padding:7px 10px; text-align:center;
+            font-size:12px; font-weight:700; color:#5A5A6A; line-height:1.6;
+            flex-shrink:0;
+        }
+        .other-machine-id {
+            font-size:10px; color:#888; text-align:center;
+            padding:3px 0; flex-shrink:0;
+        }
+        .other-machine-id span { color:#E8820C; font-weight:900; }
+        /* 사이드 버튼 공통 */
+        .side-btn {
+            flex:1; border-radius:20px; border:2px solid #C8A060;
+            background:linear-gradient(180deg,rgba(255,255,255,0.9) 0%,rgba(230,228,245,0.9) 100%);
+            color:#2A2A3A; font-size:12px; font-weight:900; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+            text-align:center; line-height:1.25; padding:4px 3px;
+            transition:filter .06s, transform .06s;
+            box-shadow:inset 0 1px 3px rgba(255,255,255,0.8), 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .side-btn:active { filter:brightness(0.88); transform:scale(0.97); }
+        /* 기능 있는 버튼은 주황 테두리 강조 */
+        .side-btn.active-fn { border-color:#E8820C; color:#8B4500; }
+        /* 취소 버튼 */
+        .side-btn.cancel-btn {
+            background:linear-gradient(180deg,#E85050 0%,#C82020 100%);
+            color:white; border-color:#881515;
+            box-shadow:inset 0 1px 3px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.25);
+        }
+        /* 비활성 버튼 */
+        .side-btn.disabled-fn { opacity:0.5; cursor:default; pointer-events:none; }
+    </style>
+</head>
+<body>
+<div class="atm-frame">
+
+    <!-- ─── 헤더: Korea Post 로고 이미지 ─── -->
+    <div class="atm-header">
+        <img src="data:image/png;base64,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" alt="우체국예금">
+        <div class="logo-divider"></div>
+    </div>
+
+    <div class="atm-screen">
+
+        <!-- ① 대기: 업무 먼저 선택 (카드 삽입 전) -->
+        <div id="scr-idle" class="view active">
+            <div class="menu-grid">
+                <button class="menu-btn" onclick="selectService('입금')">입 금</button>
+                <button class="menu-btn" onclick="selectService('출금')">출 금</button>
+                <button class="menu-btn" onclick="selectService('이체')">이체/송금</button>
+                <button class="menu-btn" onclick="selectService('통장정리')">통장정리</button>
+            </div>
+            <div class="screen-btns">
+                <button class="atm-btn btn-red" onclick="show('scr-other')">다른업무보기</button>
+            </div>
+        </div>
+
+        <!-- ② 카드 삽입 안내 (업무 선택 후) -->
+        <div id="scr-insert" class="view">
+            <div class="screen-content">
+                <p class="atm-big-text">카드를 넣어주시거나<br>통장을 바르게 펴서<br>넣어 주십시오</p>
+                <div class="atm-notice-box" style="margin-top:24px;cursor:pointer;" onclick="insertCard()">
+                    <p style="color:var(--orange-main);font-weight:900;font-size:15px;">▶ 시뮬레이션: 화면을 눌러 카드를 삽입하세요</p>
+                </div>
+            </div>
+            <div class="screen-btns">
+                <button class="atm-btn btn-red" onclick="reset()">취 소</button>
+            </div>
+        </div>
+
+        <!-- ③-입금1 현금/수표 선택: 입금은 비밀번호 없이 바로 진입 -->
+        <div id="scr-deposit-type" class="view">
+            <div class="screen-content" style="text-align:center;align-items:center;">
+                <p class="atm-big-text" style="font-size:28px;">입금하실 매체를<br>선택해 주십시오</p>
+                <p class="atm-sub-text">현금 또는 수표를 선택하세요</p>
+            </div>
+            <div class="screen-btns row">
+                <button class="atm-btn btn-orange" style="flex:1;" onclick="selectDepositType('현금')">현 금</button>
+                <button class="atm-btn btn-orange" style="flex:1;" onclick="selectDepositType('수표')">수 표</button>
+            </div>
+            <div class="screen-btns" style="padding-top:0;">
+                <button class="atm-btn btn-red" onclick="reset()">취 소</button>
+            </div>
+        </div>
+
+        <!-- ③-입금2 현금/수표 투입 안내 -->
+        <div id="scr-deposit-insert" class="view">
+            <div class="screen-content" style="text-align:center;align-items:center;">
+                <p class="atm-big-text" style="font-size:27px;" id="depositInsertTitle">현금을 넣어 주십시오</p>
+                <div class="atm-notice-box" style="margin-top:22px;width:100%;">
+                    <p id="depositInsertGuide" style="font-size:15px;font-weight:700;">지폐를 가지런히 정리한 후 투입구에 넣어 주십시오.</p>
+                </div>
+                <div class="atm-notice-box" style="margin-top:16px;cursor:pointer;width:100%;" onclick="finishDepositInsert()">
+                    <p style="color:var(--orange-main);font-weight:900;font-size:15px;">▶ 시뮬레이션: 화면을 눌러 투입을 완료하세요</p>
+                </div>
+            </div>
+            <div class="screen-btns row">
+                <button class="atm-btn btn-red" style="flex:1;" onclick="show('scr-deposit-type')">취 소</button>
+                <button class="atm-btn btn-blue" style="flex:1;" onclick="finishDepositInsert()">확 인</button>
+            </div>
+        </div>
+
+        <!-- ③ 비밀번호 입력 (PIN 스타일) -->
+        <div id="scr-password" class="view">
+            <div class="pin-info-area">
+                <p class="atm-big-text" style="font-size:26px;">비밀번호를 눌러 주십시오</p>
+                <div class="pin-dots-row" id="pwdDots">
+                    <div class="pin-dot" id="d0"></div>
+                    <div class="pin-dot" id="d1"></div>
+                    <div class="pin-dot" id="d2"></div>
+                    <div class="pin-dot" id="d3"></div>
+                </div>
+                <p style="font-size:13px;color:#888;font-weight:700;">타인에게 비밀번호가 노출되지 않도록 주의하세요</p>
+            </div>
+            <div class="pin-keypad-shell">
+                <div class="pin-num-grid">
+                    <button class="pin-key pk-num" onclick="pwdPress('1')">1</button>
+                    <button class="pin-key pk-num" onclick="pwdPress('2')">2<span class="pk-sub">ABC</span></button>
+                    <button class="pin-key pk-num" onclick="pwdPress('3')">3<span class="pk-sub">DEF</span></button>
+                    <button class="pin-key pk-num" onclick="pwdPress('4')">4<span class="pk-sub">GHI</span></button>
+                    <button class="pin-key pk-num" onclick="pwdPress('5')">5<span class="pk-sub">JKL</span></button>
+                    <button class="pin-key pk-num" onclick="pwdPress('6')">6<span class="pk-sub">MNO</span></button>
+                    <button class="pin-key pk-num" onclick="pwdPress('7')">7<span class="pk-sub">PQRS</span></button>
+                    <button class="pin-key pk-num" onclick="pwdPress('8')">8<span class="pk-sub">TUV</span></button>
+                    <button class="pin-key pk-num" onclick="pwdPress('9')">9<span class="pk-sub">WXYZ</span></button>
+                    <button class="pin-key pk-clear" onclick="pwdPress('clear')">정정<br><span style="font-size:11px;">◀</span></button>
+                    <button class="pin-key pk-num" onclick="pwdPress('0')">0</button>
+                    <button class="pin-key pk-cancel" onclick="reset()">취소<br><span style="font-size:11px;">✕</span></button>
+                </div>
+                <button class="pin-confirm-btn" onclick="pwdPress('confirm')">확인 ▶</button>
+            </div>
+        </div>
+
+        <!-- ④ 금액 선택 (출금) -->
+        <div id="scr-amt-select" class="view">
+            <div class="screen-content">
+                <p class="atm-big-text" style="font-size:26px;">출금하실 금액을<br>선택하세요</p>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 12px;flex-shrink:0;">
+                <button class="atm-btn btn-orange" onclick="doAmount(50000)">5만 원</button>
+                <button class="atm-btn btn-orange" onclick="doAmount(100000)">10만 원</button>
+                <button class="atm-btn btn-orange" onclick="doAmount(300000)">30만 원</button>
+                <button class="atm-btn btn-orange" onclick="customAmount()">기타금액</button>
+            </div>
+            <div class="screen-btns" style="margin-top:10px;">
+                <button class="atm-btn btn-red" onclick="goMenu()">취 소</button>
+            </div>
+        </div>
+
+        <!-- ⑤ 금액 직접 입력 — PIN 키패드 스타일, 도트 숨김 -->
+        <div id="scr-amt-input" class="view">
+            <div class="pin-info-area">
+                <p class="atm-big-text" style="font-size:26px;" id="amtInputTitle">출금하실 금액을<br>입력해 주십시오</p>
+                <!-- 금액은 도트 대신 실제 숫자 표시 -->
+                <div class="pin-value-display" id="amtDisplay">0 원</div>
+                <p style="font-size:12px;color:#999;font-weight:700;margin-top:4px;">입력 후 확인 버튼을 누르세요</p>
+            </div>
+            <div class="pin-keypad-shell">
+                <div class="pin-num-grid">
+                    <button class="pin-key pk-num" onclick="amtKey('1')">1</button>
+                    <button class="pin-key pk-num" onclick="amtKey('2')">2</button>
+                    <button class="pin-key pk-num" onclick="amtKey('3')">3</button>
+                    <button class="pin-key pk-num" onclick="amtKey('4')">4</button>
+                    <button class="pin-key pk-num" onclick="amtKey('5')">5</button>
+                    <button class="pin-key pk-num" onclick="amtKey('6')">6</button>
+                    <button class="pin-key pk-num" onclick="amtKey('7')">7</button>
+                    <button class="pin-key pk-num" onclick="amtKey('8')">8</button>
+                    <button class="pin-key pk-num" onclick="amtKey('9')">9</button>
+                    <button class="pin-key pk-clear" onclick="amtKey('C')">정정<br><span style="font-size:11px;">◀</span></button>
+                    <button class="pin-key pk-num" onclick="amtKey('0')">0</button>
+                    <button class="pin-key pk-cancel" onclick="goAmtBack()">취소<br><span style="font-size:11px;">✕</span></button>
+                </div>
+                <button class="pin-confirm-btn" onclick="amtKey('OK')">확인 ▶</button>
+            </div>
+        </div>
+
+        <!-- ⑥ 은행 선택 (이체) -->
+        <div id="scr-bank" class="view">
+            <div class="screen-content">
+                <p class="atm-big-text" style="font-size:26px;">받으실 분의 은행을<br>선택하세요</p>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 12px;flex-shrink:0;">
+                <button class="atm-btn btn-orange" onclick="doBank('우체국')">우체국</button>
+                <button class="atm-btn btn-orange" onclick="doBank('국민은행')">국민은행</button>
+                <button class="atm-btn btn-orange" onclick="doBank('신한은행')">신한은행</button>
+                <button class="atm-btn btn-orange" onclick="doBank('농협은행')">농협은행</button>
+            </div>
+            <div class="screen-btns" style="margin-top:10px;">
+                <button class="atm-btn btn-red" onclick="goMenu()">취 소</button>
+            </div>
+        </div>
+
+        <!-- ⑦ 계좌번호 입력 — PIN 키패드 스타일, 도트 숨김 -->
+        <div id="scr-acct" class="view">
+            <div class="pin-info-area">
+                <p class="atm-big-text" style="font-size:26px;">계좌번호를<br>입력해 주십시오</p>
+                <div class="pin-value-display" id="acctDisplay" style="font-size:20px;text-align:left;letter-spacing:2px;"></div>
+                <p style="font-size:12px;color:#999;font-weight:700;margin-top:4px;">입력 후 확인 버튼을 누르세요</p>
+            </div>
+            <div class="pin-keypad-shell">
+                <div class="pin-num-grid">
+                    <button class="pin-key pk-num" onclick="acctKey('1')">1</button>
+                    <button class="pin-key pk-num" onclick="acctKey('2')">2</button>
+                    <button class="pin-key pk-num" onclick="acctKey('3')">3</button>
+                    <button class="pin-key pk-num" onclick="acctKey('4')">4</button>
+                    <button class="pin-key pk-num" onclick="acctKey('5')">5</button>
+                    <button class="pin-key pk-num" onclick="acctKey('6')">6</button>
+                    <button class="pin-key pk-num" onclick="acctKey('7')">7</button>
+                    <button class="pin-key pk-num" onclick="acctKey('8')">8</button>
+                    <button class="pin-key pk-num" onclick="acctKey('9')">9</button>
+                    <button class="pin-key pk-clear" onclick="acctKey('C')">정정<br><span style="font-size:11px;">◀</span></button>
+                    <button class="pin-key pk-num" onclick="acctKey('0')">0</button>
+                    <button class="pin-key pk-cancel" onclick="goMenu()">취소<br><span style="font-size:11px;">✕</span></button>
+                </div>
+                <button class="pin-confirm-btn" onclick="acctKey('OK')">확인 ▶</button>
+            </div>
+        </div>
+
+        <!-- ⑧ 거래 확인 -->
+        <div id="scr-confirm" class="view">
+            <div class="screen-content top-align">
+                <p class="atm-big-text" style="font-size:24px;color:var(--red-btn);">내용을 확인해 주십시오</p>
+                <div class="confirm-table" id="confirmTable"></div>
+            </div>
+            <div class="screen-btns row">
+                <button class="atm-btn btn-red" style="flex:1;" onclick="goMenu()">취 소</button>
+                <button class="atm-btn btn-blue" style="flex:1;" onclick="doProcess()">확 인</button>
+            </div>
+        </div>
+
+        <!-- ⑨ 처리 중 -->
+        <div id="scr-loading" class="view">
+            <div class="screen-content" style="align-items:center;text-align:center;">
+                <p class="atm-big-text" style="font-size:26px;color:var(--blue-btn);">전산망 처리 중입니다</p>
+                <p class="atm-sub-text">잠시만 기다려 주십시오<br>카드를 절대 뽑지 마세요</p>
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <!-- ⑩ 영수증 -->
+        <div id="scr-receipt" class="view">
+            <div class="screen-content" style="text-align:center;align-items:center;">
+                <p class="atm-big-text" style="font-size:26px;">명세표(영수증)를<br>발행하시겠습니까?</p>
+            </div>
+            <div class="screen-btns row">
+                <button class="atm-btn btn-gray" style="flex:1;" onclick="doComplete(false)">발행 안함</button>
+                <button class="atm-btn btn-orange" style="flex:1;" onclick="doComplete(true)">발 행</button>
+            </div>
+        </div>
+
+        <!-- ⑪ 거래 완료 -->
+        <div id="scr-done" class="view">
+            <div class="screen-content" style="align-items:center;text-align:center;">
+                <div class="complete-icon">✅</div>
+                <p class="atm-big-text" style="font-size:24px;" id="doneTitle">거래가 완료되었습니다</p>
+                <div id="doneDetail" style="margin-top:16px;font-size:17px;font-weight:700;color:var(--text-mid);line-height:1.8;"></div>
+                <p style="margin-top:14px;font-size:13px;font-weight:700;color:var(--red-btn);">⚠ 카드와 현금을 반드시 챙겨가세요!</p>
+            </div>
+            <div class="screen-btns">
+                <button class="atm-btn btn-blue" onclick="reset()">처음으로</button>
+            </div>
+        </div>
+
+        <!-- ⑫ 다른업무보기 전체 메뉴 -->
+        <div id="scr-other" class="view">
+            <div class="other-menu-wrap">
+
+                <!-- 좌측 버튼 열 -->
+                <div class="other-col">
+                    <button class="side-btn active-fn" onclick="reset();selectService('출금')">예금인출</button>
+                    <button class="side-btn active-fn" onclick="reset();selectService('통장정리')">조 회</button>
+                    <button class="side-btn active-fn" onclick="reset();selectService('이체')">계좌이체(송금)<br>CMS/해외송금</button>
+                    <button class="side-btn active-fn" onclick="reset();selectService('입금')">입 금</button>
+                    <button class="side-btn active-fn" onclick="reset();selectService('통장정리')">통장/보험정리</button>
+                    <button class="side-btn disabled-fn">무통장/<br>무카드거래</button>
+                    <button class="side-btn cancel-btn" onclick="reset()">취 소</button>
+                </div>
+
+                <!-- 중앙 광고/안내 -->
+                <div class="other-center">
+                    <div class="other-ad-box" style="padding:6px;">
+                        <img src="data:image/jpeg;base64,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" alt="우체국 광고" style="width:100%;height:100%;object-fit:contain;border-radius:6px;">
+                    </div>
+                    <div class="other-bottom-info">오만/만원 출금가능<br>5만/1만/수표입금가능</div>
+
+                </div>
+
+                <!-- 우측 버튼 열 -->
+                <div class="other-col">
+                    <button class="side-btn disabled-fn">신용카드</button>
+                    <button class="side-btn disabled-fn">지로/공과금<br>대학등록금</button>
+                    <button class="side-btn disabled-fn">전자통장/<br>티머니거래</button>
+                    <button class="side-btn disabled-fn">보험서비스</button>
+                    <button class="side-btn disabled-fn">사고신고</button>
+                    <button class="side-btn disabled-fn">스마트폰출금</button>
+                    <button class="side-btn disabled-fn" style="font-size:11px;">Foreign<br>language</button>
+                </div>
+
+            </div>
+        </div>
+
+    </div><!-- /atm-screen -->
+</div><!-- /atm-frame -->
+
+<script>
+    let balance = 2850000;
+    let task = '', amtBuf = '0', acctBuf = '', pwdBuf = '';
+    let txAmt = 0, txBank = '', txAcct = '', txDepositType = '';
+
+    window.onload = () => show('scr-idle');
+
+    /* ── 화면 전환 ── */
+    function show(id, tts) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if (tts) speak(tts);
+    }
+
+    function speak(txt) {
+        if (!window.speechSynthesis) return;
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(txt);
+        u.lang = 'ko-KR'; u.rate = 0.92;
+        speechSynthesis.speak(u);
+    }
+
+    /* ── 초기화: 처음 대기 화면(업무 선택)으로 ── */
+    function reset() {
+        task=''; amtBuf='0'; acctBuf=''; pwdBuf=''; txAmt=0; txBank=''; txAcct=''; txDepositType='';
+        show('scr-idle');
+    }
+
+    /* ── STEP 1: 업무 선택 ──
+       입금은 실제 ATM UX에 맞춰 비밀번호/PIN 없이 바로 현금·수표 선택으로 이동 */
+    function selectService(name) {
+        task = name;
+        amtBuf = '0';
+        if (task === '입금') {
+            txDepositType = '';
+            show('scr-deposit-type', '입금하실 매체를 선택해 주십시오. 현금 또는 수표를 선택하세요.');
+            return;
+        }
+        show('scr-insert', '카드를 넣어주시거나 통장을 바르게 펴서 넣어 주십시오.');
+    }
+
+    /* ── STEP 2: 카드 삽입 → 로딩 → 비밀번호 ── */
+    function insertCard() {
+        show('scr-loading');
+        setTimeout(() => {
+            pwdBuf = '';
+            updateDots();
+            show('scr-password', '비밀번호 네 자리를 입력하고 확인을 눌러 주십시오.');
+        }, 1000);
+    }
+
+    /* ── STEP 3: 비밀번호 확인 → 선택한 업무 화면으로 직행 ──
+       규칙: 반드시 확인 버튼을 눌러야 다음 화면으로 이동 */
+    function pwdPress(val) {
+        if (val === 'confirm') {
+            if (pwdBuf.length < 4) { shakeDots('pwdDots'); speak('비밀번호 네 자리를 입력해 주십시오.'); return; }
+            /* 비밀번호 확인 완료 → 업무별 화면으로 바로 이동 */
+            if (task === '출금') show('scr-amt-select', '출금하실 금액을 선택해 주십시오.');
+            else if (task === '입금') show('scr-deposit-type', '입금하실 매체를 선택해 주십시오.');
+            else if (task === '이체') show('scr-bank', '받으실 분의 은행을 선택해 주십시오.');
+            else doProcess(); /* 통장정리 */
+            return;
+        }
+        if (val === 'clear') { pwdBuf = pwdBuf.slice(0, -1); updateDots(); return; }
+        if (pwdBuf.length < 4) { pwdBuf += val; updateDots(); }
+        /* 4자리 자동 진행 없음 — 확인 버튼 필수 */
+    }
+
+    function updateDots() {
+        for (let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('on', i < pwdBuf.length);
+    }
+
+    function shakeDots(rowId) {
+        const el = document.getElementById(rowId);
+        let n=0;
+        const t = setInterval(()=>{ el.style.transform = n%2===0?'translateX(7px)':'translateX(-7px)'; if(++n>6){clearInterval(t);el.style.transform='';} },55);
+    }
+
+    /* ── 입금: 현금/수표 선택 → 투입 안내 → 금액 확인 ── */
+    function selectDepositType(kind) {
+        txDepositType = kind;
+        txAmt = 100000; // 교육용 시뮬레이터 기본 인식 금액
+        const title = document.getElementById('depositInsertTitle');
+        const guide = document.getElementById('depositInsertGuide');
+        if (kind === '수표') {
+            title.innerText = '수표를 넣어 주십시오';
+            guide.innerText = '수표의 앞면이 위로 향하도록 정리한 후 투입구에 넣어 주십시오.';
+            show('scr-deposit-insert', '수표를 투입구에 넣어 주십시오.');
+        } else {
+            title.innerText = '현금을 넣어 주십시오';
+            guide.innerText = '지폐를 가지런히 정리한 후 투입구에 넣어 주십시오.';
+            show('scr-deposit-insert', '현금을 투입구에 넣어 주십시오.');
+        }
+    }
+
+    function finishDepositInsert() {
+        show('scr-loading', '투입하신 매체를 확인하고 있습니다. 잠시만 기다려 주십시오.');
+        setTimeout(() => {
+            renderConfirm();
+            show('scr-confirm', '내용을 확인해 주십시오.');
+        }, 1200);
+    }
+
+    /* ── 취소: 업무 선택 상태에 맞는 이전 단계로 돌아감 ── */
+    function goMenu() {
+        if (task === '입금') show('scr-deposit-type');
+        else show('scr-insert');
+    }
+
+    /* ── 출금 금액 선택 ── */
+    function doAmount(a) { txAmt=a; renderConfirm(); show('scr-confirm','내용을 확인해 주십시오.'); }
+
+    function customAmount() {
+        amtBuf='0';
+        document.getElementById('amtDisplay').innerText='0 원';
+        document.getElementById('amtInputTitle').innerText='출금하실 금액을\n입력해 주십시오';
+        show('scr-amt-input','금액을 입력하신 후 확인을 눌러 주십시오.');
+    }
+
+    /* ── 금액 키패드: 확인 버튼 눌러야 다음 화면 이동 ── */
+    function amtKey(v) {
+        if (v==='C') {
+            amtBuf = amtBuf.length > 1 ? amtBuf.slice(0, -1) : '0';
+            document.getElementById('amtDisplay').innerText = (parseInt(amtBuf)||0).toLocaleString()+' 원';
+            return;
+        }
+        if (v==='OK') {
+            const n = parseInt(amtBuf);
+            if (!n || n<=0) { speak('금액을 입력해 주십시오.'); return; }
+            txAmt=n; renderConfirm(); show('scr-confirm','내용을 확인해 주십시오.');
+            return;
+        }
+        if (amtBuf==='0') amtBuf='';
+        amtBuf+=v;
+        document.getElementById('amtDisplay').innerText = (parseInt(amtBuf)||0).toLocaleString()+' 원';
+    }
+
+    /* 금액 입력 취소 → 이전 화면으로 */
+    function goAmtBack() {
+        if (task==='이체') show('scr-acct');
+        else show('scr-amt-select');
+    }
+
+    /* ── 은행 / 계좌 ── */
+    function doBank(b) {
+        txBank=b; acctBuf='';
+        document.getElementById('acctDisplay').innerText='';
+        show('scr-acct', b+'을 선택하셨습니다. 계좌번호를 입력해 주십시오.');
+    }
+
+    /* ── 계좌 키패드: 확인 버튼 눌러야 다음 화면 이동 ── */
+    function acctKey(v) {
+        if (v==='C') {
+            acctBuf = acctBuf.slice(0, -1);
+            document.getElementById('acctDisplay').innerText = acctBuf;
+            return;
+        }
+        if (v==='OK') {
+            if (acctBuf.length<5) { speak('계좌번호를 다시 입력해 주십시오.'); return; }
+            txAcct=acctBuf; amtBuf='0';
+            document.getElementById('amtDisplay').innerText='0 원';
+            document.getElementById('amtInputTitle').innerText='송금하실 금액을\n입력해 주십시오';
+            show('scr-amt-input','보내실 금액을 입력하신 후 확인을 눌러 주십시오.');
+            return;
+        }
+        if (acctBuf.length<15) acctBuf+=v;
+        document.getElementById('acctDisplay').innerText=acctBuf;
+    }
+
+    /* ── 확인 화면 렌더 ── */
+    function renderConfirm() {
+        const box = document.getElementById('confirmTable');
+        let rows='';
+        if (task==='출금') {
+            rows = row('거래 종류','예금 인출 (출금)')+row('출금 금액',`<span class="value big">${txAmt.toLocaleString()} 원</span>`)+row('현재 잔액',`${balance.toLocaleString()} 원`);
+        } else if (task==='입금') {
+            const depositLabel = (txDepositType || '현금') + ' 입금';
+            rows = row('거래 종류', depositLabel)+row('입금 금액',`<span class="value blue">${txAmt.toLocaleString()} 원</span>`);
+        } else if (task==='이체') {
+            rows = row('거래 종류','계좌 이체')+row('입금 은행',txBank)+row('계좌 번호',txAcct)+row('예금주','홍 길 동')+row('송금 금액',`<span class="value big">${txAmt.toLocaleString()} 원</span>`);
+        }
+        box.innerHTML=rows;
+    }
+    function row(label,value){ return `<div class="confirm-row"><span class="label">${label}</span><span class="value">${value}</span></div>`; }
+
+    /* ── 처리 / 완료 ── */
+    function doProcess() {
+        show('scr-loading','전산망 처리 중입니다. 잠시만 기다려 주십시오.');
+        setTimeout(()=>{ if(task==='통장정리'){showDone();return;} show('scr-receipt','명세표 발행 여부를 선택해 주십시오.'); },1600);
+    }
+    function doComplete(r){ showDone(); }
+    function showDone() {
+        const t=document.getElementById('doneTitle'), d=document.getElementById('doneDetail');
+        if(task==='출금'){balance-=txAmt;t.innerText='현금이 인출되었습니다';d.innerHTML=`출금액: ${txAmt.toLocaleString()}원<br><b>잔액: ${balance.toLocaleString()}원</b>`;}
+        else if(task==='입금'){balance+=txAmt;t.innerText='입금이 완료되었습니다';d.innerHTML=`${txDepositType || '현금'} 입금액: ${txAmt.toLocaleString()}원<br><b>잔액: ${balance.toLocaleString()}원</b>`;}
+        else if(task==='이체'){balance-=txAmt;t.innerText='이체가 완료되었습니다';d.innerHTML=`송금액: ${txAmt.toLocaleString()}원 (${txBank})<br><b>잔액: ${balance.toLocaleString()}원</b>`;}
+        else{t.innerText='현재 잔액 조회';d.innerHTML=`<span style="font-size:22px;color:var(--blue-btn);"><b>잔액: ${balance.toLocaleString()}원</b></span>`;}
+        show('scr-done','거래가 완료되었습니다. 카드를 반드시 챙겨 가십시오.');
+    }
+</script>
+</body>
+</html>
