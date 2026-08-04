@@ -49,6 +49,8 @@ body{
 
     box-shadow:0 10px 35px rgba(0,0,0,.12);
 
+    text-align:center;
+
 }
 
 h1{
@@ -73,6 +75,8 @@ h1{
 
     margin-bottom:22px;
 
+    text-align:center;
+
 }
 
 .guide{
@@ -80,6 +84,8 @@ h1{
     font-size:25px;
 
     margin-bottom:24px;
+
+    text-align:center;
 
 }
 
