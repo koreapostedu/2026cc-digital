@@ -1,1 +1,35 @@
-// 우체국 디지털금융 체험관
+function playVideo(file){
+
+    const popup=document.getElementById("videoPlayer");
+
+    const video=document.getElementById("video");
+
+    video.src=file;
+
+    popup.style.display="flex";
+
+    video.load();
+
+    video.play();
+
+}
+
+function closeVideo(){
+
+    const popup=document.getElementById("videoPlayer");
+
+    const video=document.getElementById("video");
+
+    video.pause();
+
+    video.currentTime=0;
+
+    popup.style.display="none";
+
+}
+
+function openATM(){
+
+    window.location.href="emulators/ATM에뮬레이터.html";
+
+}
