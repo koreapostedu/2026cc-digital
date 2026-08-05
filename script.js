@@ -62,9 +62,11 @@ async function saveLog(content){
 
     } catch(error){
 
-        console.error("저장 오류:", error);
+        console.error("저장 오류:", error.code, error.message);
 
     }
+
+    console.log("saveLog 함수 종료");
 
 }
 
