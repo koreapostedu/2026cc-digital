@@ -44,7 +44,7 @@ console.log("Firebase 연결 성공");
 
 function saveLog(content){
 
-    console.log("저장 시도:", content);
+    console.log("saveLog 실행됨:", content);
 
     addDoc(collection(db,"usage_logs"),{
 
@@ -57,11 +57,15 @@ function saveLog(content){
         timestamp:serverTimestamp()
 
     })
-    .then(() => {
-        console.log("저장 성공:", content);
+    .then((doc)=>{
+
+        console.log("Firestore 저장 완료:", doc.id);
+
     })
-    .catch((error) => {
-        console.error("저장 실패:", error);
+    .catch((error)=>{
+
+        console.error("Firestore 저장 오류:", error);
+
     });
 
 }
