@@ -44,6 +44,8 @@ console.log("Firebase 연결 성공");
 
 function saveLog(content){
 
+    console.log("저장 시도:", content);
+
     addDoc(collection(db,"usage_logs"),{
 
         office:"test",
@@ -54,10 +56,15 @@ function saveLog(content){
 
         timestamp:serverTimestamp()
 
+    })
+    .then(() => {
+        console.log("저장 성공:", content);
+    })
+    .catch((error) => {
+        console.error("저장 실패:", error);
     });
 
 }
-
 
 
 // =========================
