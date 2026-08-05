@@ -12,6 +12,10 @@ function playVideo(file){
 
     video.play();
 
+    video.onended = function(){
+
+    closeVideo();
+
 }
 
 function closeVideo(){
