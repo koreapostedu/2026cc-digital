@@ -35,6 +35,8 @@ const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
+console.log("Firebase 연결 성공");
+
 
 // =========================
 // 방문 기록 저장
