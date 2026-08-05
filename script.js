@@ -14,10 +14,11 @@ function playVideo(file){
 
     video.onended = function(){
 
-    closeVideo();
+        closeVideo();
+
+    };
 
 }
-
 function closeVideo(){
 
     const popup=document.getElementById("videoPlayer");
