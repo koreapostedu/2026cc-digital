@@ -42,21 +42,31 @@ console.log("Firebase 연결 성공");
 // 방문 기록 저장
 // =========================
 
-function saveLog(content){
+async function saveLog(content){
 
-    console.log("saveLog 실행됨:", content);
+    console.log("저장 시도:", content);
 
-    addDoc(collection(db,"usage_logs"),{
+    try {
 
-        office:"test",
+        const docRef = await addDoc(
+            collection(db,"usage_logs"),
+            {
+                office:"test",
+                event:"click",
+                content:content,
+                timestamp:serverTimestamp()
+            }
+        );
 
-        event:"click",
+        console.log("저장 완료:", docRef.id);
 
-        content:content,
+    } catch(error){
 
-        timestamp:serverTimestamp()
+        console.error("저장 오류:", error);
 
-    })
+    }
+
+}
     .then((doc)=>{
 
         console.log("Firestore 저장 완료:", doc.id);
