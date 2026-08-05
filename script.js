@@ -67,18 +67,6 @@ async function saveLog(content){
     }
 
 }
-    .then((doc)=>{
-
-        console.log("Firestore 저장 완료:", doc.id);
-
-    })
-    .catch((error)=>{
-
-        console.error("Firestore 저장 오류:", error);
-
-    });
-
-}
 
 
 // =========================
