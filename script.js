@@ -9,7 +9,8 @@ import {
     getFirestore,
     collection,
     addDoc,
-    serverTimestamp
+    serverTimestamp,
+    enableNetwork
 } 
 from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
@@ -36,6 +37,14 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 console.log("Firebase 연결 성공");
+
+enableNetwork(db)
+.then(() => {
+    console.log("Firestore 네트워크 연결 성공");
+})
+.catch((error)=>{
+    console.error("Firestore 네트워크 오류:", error);
+});
 
 
 // =========================
