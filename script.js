@@ -48,15 +48,21 @@ async function saveLog(content){
 
     try {
 
-        const docRef = await addDoc(
-            collection(db,"usage_logs"),
-            {
-                office:"test",
-                event:"click",
-                content:content,
-                timestamp:serverTimestamp()
-            }
-        );
+        const docRef = await Promise.race([
+    addDoc(
+        collection(db,"usage_logs"),
+        {
+            office:"test",
+            event:"click",
+            content:content,
+            timestamp:serverTimestamp()
+        }
+    ),
+
+    new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Firestore 응답 시간 초과")), 5000)
+    )
+]);
 
         console.log("저장 완료:", docRef.id);
 
