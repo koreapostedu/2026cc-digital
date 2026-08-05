@@ -58,24 +58,24 @@ async function saveLog(content){
     try {
 
         const docRef = await addDoc(
-    collection(db,"usage_logs"),
-    {
-        office:"test",
-        event:"click",
-        content:content,
-        timestamp:serverTimestamp()
-    }
-);
+            collection(db,"usage_logs"),
+            {
+                office:"test",
+                event:"click",
+                content:content,
+                timestamp:serverTimestamp()
+            }
+        );
+
         console.log("저장 완료:", docRef.id);
 
     } catch(error){
 
         console.error(
-    "저장 오류:",
-    error.code,
-    error.message,
-    error
-);
+            "저장 오류:",
+            error.code,
+            error.message
+        );
 
     }
 
