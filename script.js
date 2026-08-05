@@ -70,7 +70,12 @@ async function saveLog(content){
 
     } catch(error){
 
-        console.error("저장 오류:", error.code, error.message);
+        console.error(
+    "저장 오류:",
+    error.code,
+    error.message,
+    error
+);
 
     }
 
