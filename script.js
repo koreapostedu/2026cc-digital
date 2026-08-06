@@ -57,6 +57,8 @@ async function saveLog(content){
 
     try {
 
+        console.log("컬렉션:", collection(db, "usage_logs"));
+        
         const docRef = await addDoc(
             collection(db,"usage_logs"),
             {
