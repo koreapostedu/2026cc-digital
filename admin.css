@@ -1,1 +1,278 @@
+// =====================================
+// 관리자 통계 페이지
+// =====================================
 
+import {
+    getFirestore,
+    collection,
+    getDocs
+}
+from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+import {
+    initializeApp
+}
+from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+
+import {
+    offices
+}
+from "./offices.js";
+
+
+// =====================================
+// Firebase 연결
+// =====================================
+
+const firebaseConfig = {
+
+    apiKey: "AIzaSyArYxYll7yn4JtcdiAL1PSvng2Kg7dNf9E",
+
+    authDomain: "cc-digital-4f66f.firebaseapp.com",
+
+    projectId: "cc-digital-4f66f",
+
+    storageBucket: "cc-digital-4f66f.firebasestorage.app",
+
+    messagingSenderId: "193293634741",
+
+    appId: "1:193293634741:web:02713287593358959502fc"
+
+};
+
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+
+
+// =====================================
+// 통계 불러오기
+// =====================================
+
+async function loadStatistics(){
+
+
+    const snapshot =
+        await getDocs(
+            collection(db,"usage_logs")
+        );
+
+
+    let visitCount = 0;
+
+    let clickCount = 0;
+
+
+    const officeCount = {};
+
+    const contentCount = {};
+
+
+
+    snapshot.forEach((doc)=>{
+
+
+        const data = doc.data();
+
+
+
+        // 접속 통계
+
+        if(data.event === "visit"){
+
+
+            visitCount++;
+
+
+            const name =
+                data.officeName || "미지정";
+
+
+            if(!officeCount[name]){
+
+                officeCount[name] = 0;
+
+            }
+
+
+            officeCount[name]++;
+
+
+        }
+
+
+
+        // 콘텐츠 통계
+
+        if(data.event === "click"){
+
+
+            clickCount++;
+
+
+            const content =
+                data.content || "기타";
+
+
+            if(!contentCount[content]){
+
+                contentCount[content] = 0;
+
+            }
+
+
+            contentCount[content]++;
+
+
+        }
+
+
+
+    });
+
+
+
+    // 숫자 표시
+
+    document.getElementById(
+        "totalVisit"
+    ).innerText = visitCount;
+
+
+
+    document.getElementById(
+        "totalClick"
+    ).innerText = clickCount;
+
+
+
+    // 표 출력
+
+    renderOfficeTable(
+        officeCount
+    );
+
+
+    renderContentTable(
+        contentCount
+    );
+
+}
+
+
+
+// =====================================
+// 총괄국 표
+// =====================================
+
+function renderOfficeTable(data){
+
+
+    const table =
+        document.getElementById(
+            "officeTable"
+        );
+
+
+    table.innerHTML = "";
+
+
+
+    Object.keys(offices).forEach(
+        (code)=>{
+
+
+            const name =
+                offices[code];
+
+
+            const count =
+                data[name] || 0;
+
+
+
+            table.innerHTML += `
+
+            <tr>
+
+            <td>
+            ${name}
+            </td>
+
+
+            <td>
+            ${count}
+            </td>
+
+
+            </tr>
+
+            `;
+
+
+        }
+    );
+
+}
+
+
+
+
+// =====================================
+// 콘텐츠 표
+// =====================================
+
+function renderContentTable(data){
+
+
+    const table =
+        document.getElementById(
+            "contentTable"
+        );
+
+
+    table.innerHTML = "";
+
+
+
+    Object.keys(data)
+    .sort(
+        (a,b)=>
+        data[b]-data[a]
+    )
+    .forEach(
+        (content)=>{
+
+
+            table.innerHTML += `
+
+            <tr>
+
+            <td>
+            ${content}
+            </td>
+
+
+            <td>
+            ${data[content]}
+            </td>
+
+
+            </tr>
+
+            `;
+
+
+        }
+    );
+
+
+}
+
+
+
+// 실행
+
+loadStatistics();
