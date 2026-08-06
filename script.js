@@ -45,40 +45,29 @@ console.log("Firebase 연결 성공");
 
 async function saveLog(content){
 
-    console.log("저장 시도:", content);
+    console.log("저장 테스트 시작");
+
+    const data = {
+        office: "test",
+        event: "click",
+        content: content,
+        timestamp: new Date()
+    };
 
     try {
 
-        console.log(collection(db,"usage_logs"));
-
-console.log("addDoc 시작");
-console.log("addDoc 함수:", addDoc);
-
-const docRef = await addDoc(
-            collection(db,"usage_logs"),
-            {
-                office:"test",
-                event:"click",
-                content:content,
-                timestamp:serverTimestamp()
-            }
+        const result = await addDoc(
+            collection(db, "usage_logs"),
+            data
         );
 
-console.log("addDoc 끝");
-
-console.log("저장 완료:", docRef.id);
+        console.log("저장 성공:", result.id);
 
     } catch(error){
 
-        console.error(
-            "저장 오류:",
-            error.code,
-            error.message
-        );
+        console.error("저장 실패:", error);
 
     }
-
-    console.log("saveLog 함수 종료");
 
 }
 
