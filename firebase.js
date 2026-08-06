@@ -77,3 +77,7 @@ export async function saveUsageLog(data){
     }
 
 }
+
+
+// 관리자 페이지에서 사용할 수 있도록 export
+export { db };
