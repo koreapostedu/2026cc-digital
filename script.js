@@ -37,6 +37,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 console.log("Firebase 연결 성공");
+console.log("Firestore 객체:", db);
 
 
 // =========================
