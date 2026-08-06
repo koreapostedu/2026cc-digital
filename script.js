@@ -57,9 +57,11 @@ async function saveLog(content){
 
     try {
 
-        console.log("컬렉션:", collection(db, "usage_logs"));
-        
-        const docRef = await addDoc(
+        console.log(collection(db,"usage_logs"));
+
+console.log("addDoc 시작");
+
+const docRef = await addDoc(
             collection(db,"usage_logs"),
             {
                 office:"test",
@@ -69,7 +71,9 @@ async function saveLog(content){
             }
         );
 
-        console.log("저장 완료:", docRef.id);
+console.log("addDoc 끝");
+
+console.log("저장 완료:", docRef.id);
 
     } catch(error){
 
