@@ -1,94 +1,84 @@
-// =========================
-// Firebase 연결
-// =========================
+// =====================================
+// 체험관 동작 스크립트
+// =====================================
 
-import { initializeApp } 
-from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-
-import { 
-    getFirestore,
-    collection,
-    addDoc,
-    serverTimestamp,
-    enableNetwork
-} 
-from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+import { saveUsageLog } from "./firebase.js";
+import { offices } from "./offices.js";
 
 
-const firebaseConfig = {
+// =====================================
+// QR 접속 총괄국 확인
+// =====================================
 
-    apiKey: "AIzaSyArYxYll7yn4JtcdiAL1PSvng2Kg7dNf9E",
+const params = new URLSearchParams(
+    window.location.search
+);
 
-    authDomain: "cc-digital-4f66.firebaseapp.com",
+const officeCode = params.get("office") || "000";
 
-    projectId: "cc-digital-4f66",
-
-    storageBucket: "cc-digital-4f66.firebasestorage.app",
-
-    messagingSenderId: "193293634741",
-
-    appId: "1:193293634741:web:02713287593358959502fc"
-
-};
+const officeName = offices[officeCode] || "미지정";
 
 
-const app = initializeApp(firebaseConfig);
+// =====================================
+// 최초 접속 기록 저장
+// =====================================
 
-const db = getFirestore(app);
+saveUsageLog({
 
-console.log("Firebase 연결 성공");
-console.log("Firestore 객체:", db);
+    officeCode: officeCode,
+
+    officeName: officeName,
+
+    event: "visit"
+
+});
+
+console.log(
+    "접속 총괄국:",
+    officeName
+);
 
 
-// =========================
-// 방문 기록 저장
-// =========================
+// =====================================
+// 콘텐츠 클릭 기록
+// =====================================
 
-async function saveLog(content){
+function clickContent(content){
 
-    console.log("저장 테스트 시작");
+    saveUsageLog({
 
-    const data = {
-        office: "test",
+        officeCode: officeCode,
+
+        officeName: officeName,
+
         event: "click",
-        content: content,
-        timestamp: new Date()
-    };
 
-    try {
+        content: content
 
-        const result = await addDoc(
-            collection(db, "usage_logs"),
-            data
-        );
-
-        console.log("저장 성공:", result.id);
-
-    } catch(error){
-
-        console.error("저장 실패:", error);
-
-    }
+    });
 
 }
 
 
-// =========================
+// =====================================
 // 영상 실행
-// =========================
+// =====================================
 
-window.playVideo = function(file){
+window.playVideo = function(file, content){
 
-    saveLog(file);
-
-    const popup=document.getElementById("videoPlayer");
-
-    const video=document.getElementById("video");
+    clickContent(content);
 
 
-    video.src=file;
+    const popup =
+        document.getElementById("videoPlayer");
 
-    popup.style.display="flex";
+    const video =
+        document.getElementById("video");
+
+
+    video.src = file;
+
+    popup.style.display = "flex";
 
 
     video.load();
@@ -102,39 +92,62 @@ window.playVideo = function(file){
 
     };
 
-}
+};
 
 
-
-// =========================
+// =====================================
 // 영상 닫기
-// =========================
+// =====================================
 
 window.closeVideo = function(){
 
-    const popup=document.getElementById("videoPlayer");
+    const popup =
+        document.getElementById("videoPlayer");
 
-    const video=document.getElementById("video");
+    const video =
+        document.getElementById("video");
 
 
     video.pause();
 
-    video.currentTime=0;
+    video.currentTime = 0;
 
-    popup.style.display="none";
+    popup.style.display = "none";
 
-}
+};
 
 
-
-// =========================
-// ATM 이동
-// =========================
+// =====================================
+// ATM 체험 이동
+// =====================================
 
 window.openATM = function(){
 
-    saveLog("ATM 사용 체험");
+    clickContent("atm");
 
-    window.location.href="emulators/ATM에뮬레이터.html";
+    window.location.href =
+        "emulators/ATM에뮬레이터.html";
 
-}
+};
+
+
+// =====================================
+// 잇다뱅킹 체험
+// =====================================
+
+window.openBanking = function(){
+
+    clickContent("banking");
+
+};
+
+
+// =====================================
+// 키오스크 앱 안내
+// =====================================
+
+window.openKiosk = function(){
+
+    clickContent("kiosk");
+
+};
