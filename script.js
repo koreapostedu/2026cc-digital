@@ -7,20 +7,30 @@ import { offices } from "./offices.js";
 
 
 // =====================================
-// QR 접속 총괄국 확인
+// QR 총괄국 확인
 // =====================================
 
 const params = new URLSearchParams(
     window.location.search
 );
 
+
 const officeCode = params.get("office") || "000";
+
 
 const officeName = offices[officeCode] || "미지정";
 
 
+console.log(
+    "접속 총괄국:",
+    officeCode,
+    officeName
+);
+
+
+
 // =====================================
-// 최초 접속 기록 저장
+// QR 접속 기록 저장
 // =====================================
 
 saveUsageLog({
@@ -33,10 +43,6 @@ saveUsageLog({
 
 });
 
-console.log(
-    "접속 총괄국:",
-    officeName
-);
 
 
 // =====================================
@@ -60,11 +66,13 @@ function clickContent(content){
 }
 
 
+
 // =====================================
 // 영상 실행
 // =====================================
 
 window.playVideo = function(file, content){
+
 
     clickContent(content);
 
@@ -72,18 +80,23 @@ window.playVideo = function(file, content){
     const popup =
         document.getElementById("videoPlayer");
 
+
     const video =
         document.getElementById("video");
 
 
+
     video.src = file;
+
 
     popup.style.display = "flex";
 
 
     video.load();
 
+
     video.play();
+
 
 
     video.onended = function(){
@@ -92,7 +105,9 @@ window.playVideo = function(file, content){
 
     };
 
+
 };
+
 
 
 // =====================================
@@ -101,34 +116,27 @@ window.playVideo = function(file, content){
 
 window.closeVideo = function(){
 
+
     const popup =
         document.getElementById("videoPlayer");
+
 
     const video =
         document.getElementById("video");
 
 
+
     video.pause();
+
 
     video.currentTime = 0;
 
+
     popup.style.display = "none";
 
-};
-
-
-// =====================================
-// ATM 체험 이동
-// =====================================
-
-window.openATM = function(){
-
-    clickContent("atm");
-
-    window.location.href =
-        "emulators/ATM에뮬레이터.html";
 
 };
+
 
 
 // =====================================
@@ -137,17 +145,52 @@ window.openATM = function(){
 
 window.openBanking = function(){
 
+
     clickContent("banking");
+
+
+    window.open(
+        "https://www.posid.or.kr/menu_v2.html",
+        "_blank"
+    );
+
 
 };
 
 
+
 // =====================================
-// 키오스크 앱 안내
+// ATM 체험
+// =====================================
+
+window.openATM = function(){
+
+
+    clickContent("atm");
+
+
+    window.location.href =
+        "emulators/ATM에뮬레이터.html";
+
+
+};
+
+
+
+// =====================================
+// 키오스크 앱 설치
 // =====================================
 
 window.openKiosk = function(){
 
+
     clickContent("kiosk");
+
+
+    window.open(
+        "https://play.google.com/store/search?q=%EC%97%94%EB%B8%8C%EB%A0%88%EC%9D%B8%20%EA%B5%90%EC%9C%A1%EC%9A%A9%20%ED%82%A4%EC%98%A4%EC%8A%A4%ED%81%AC&c=apps",
+        "_blank"
+    );
+
 
 };
