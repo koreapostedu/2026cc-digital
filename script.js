@@ -146,7 +146,7 @@ window.closeVideo = function(){
 window.openBanking = function(){
 
 
-    clickContent("banking");
+    clickContent("잇다뱅킹 체험");
 
 
     window.open(
@@ -166,8 +166,7 @@ window.openBanking = function(){
 window.openATM = function(){
 
 
-    clickContent("atm");
-
+    clickContent("ATM 체험");
 
     window.location.href =
         "emulators/ATM에뮬레이터.html";
@@ -184,7 +183,7 @@ window.openATM = function(){
 window.openKiosk = function(){
 
 
-    clickContent("kiosk");
+    clickContent("키오스크 설치");
 
 
     window.open(
