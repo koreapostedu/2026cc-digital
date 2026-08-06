@@ -19,11 +19,11 @@ const firebaseConfig = {
 
     apiKey: "AIzaSyArYxYll7yn4JtcdiAL1PSvng2Kg7dNf9E",
 
-    authDomain: "cc-digital-4f66.firebaseapp.com",
+    authDomain: "cc-digital-4f66f.firebaseapp.com",
 
-    projectId: "cc-digital-4f66",
+    projectId: "cc-digital-4f66f",
 
-    storageBucket: "cc-digital-4f66.firebasestorage.app",
+    storageBucket: "cc-digital-4f66f.firebasestorage.app",
 
     messagingSenderId: "193293634741",
 
