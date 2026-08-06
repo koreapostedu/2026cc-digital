@@ -1,278 +1,359 @@
-// =====================================
-// 관리자 통계 페이지
-// =====================================
+/* =====================================
+   관리자 통계 대시보드 스타일
+===================================== */
 
-import {
-    getFirestore,
-    collection,
-    getDocs
-}
-from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-import {
-    initializeApp
-}
-from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+/* 전체 설정 */
 
-import {
-    offices
-}
-from "./offices.js";
+* {
 
-
-// =====================================
-// Firebase 연결
-// =====================================
-
-const firebaseConfig = {
-
-    apiKey: "AIzaSyArYxYll7yn4JtcdiAL1PSvng2Kg7dNf9E",
-
-    authDomain: "cc-digital-4f66f.firebaseapp.com",
-
-    projectId: "cc-digital-4f66f",
-
-    storageBucket: "cc-digital-4f66f.firebasestorage.app",
-
-    messagingSenderId: "193293634741",
-
-    appId: "1:193293634741:web:02713287593358959502fc"
-
-};
-
-
-const app = initializeApp(firebaseConfig);
-
-const db = getFirestore(app);
-
-
-
-// =====================================
-// 통계 불러오기
-// =====================================
-
-async function loadStatistics(){
-
-
-    const snapshot =
-        await getDocs(
-            collection(db,"usage_logs")
-        );
-
-
-    let visitCount = 0;
-
-    let clickCount = 0;
-
-
-    const officeCount = {};
-
-    const contentCount = {};
-
-
-
-    snapshot.forEach((doc)=>{
-
-
-        const data = doc.data();
-
-
-
-        // 접속 통계
-
-        if(data.event === "visit"){
-
-
-            visitCount++;
-
-
-            const name =
-                data.officeName || "미지정";
-
-
-            if(!officeCount[name]){
-
-                officeCount[name] = 0;
-
-            }
-
-
-            officeCount[name]++;
-
-
-        }
-
-
-
-        // 콘텐츠 통계
-
-        if(data.event === "click"){
-
-
-            clickCount++;
-
-
-            const content =
-                data.content || "기타";
-
-
-            if(!contentCount[content]){
-
-                contentCount[content] = 0;
-
-            }
-
-
-            contentCount[content]++;
-
-
-        }
-
-
-
-    });
-
-
-
-    // 숫자 표시
-
-    document.getElementById(
-        "totalVisit"
-    ).innerText = visitCount;
-
-
-
-    document.getElementById(
-        "totalClick"
-    ).innerText = clickCount;
-
-
-
-    // 표 출력
-
-    renderOfficeTable(
-        officeCount
-    );
-
-
-    renderContentTable(
-        contentCount
-    );
+    box-sizing: border-box;
 
 }
 
 
 
-// =====================================
-// 총괄국 표
-// =====================================
+body {
 
-function renderOfficeTable(data){
+    margin: 0;
 
+    padding: 0;
 
-    const table =
-        document.getElementById(
-            "officeTable"
-        );
+    font-family:
+        "Pretendard",
+        "Noto Sans KR",
+        sans-serif;
 
+    background: #f4f7fb;
 
-    table.innerHTML = "";
-
-
-
-    Object.keys(offices).forEach(
-        (code)=>{
-
-
-            const name =
-                offices[code];
-
-
-            const count =
-                data[name] || 0;
-
-
-
-            table.innerHTML += `
-
-            <tr>
-
-            <td>
-            ${name}
-            </td>
-
-
-            <td>
-            ${count}
-            </td>
-
-
-            </tr>
-
-            `;
-
-
-        }
-    );
+    color: #333;
 
 }
 
 
 
-
-// =====================================
-// 콘텐츠 표
-// =====================================
-
-function renderContentTable(data){
+/* =====================================
+   전체 영역
+===================================== */
 
 
-    const table =
-        document.getElementById(
-            "contentTable"
-        );
+.dashboard {
 
+    max-width: 1200px;
 
-    table.innerHTML = "";
+    margin: 0 auto;
 
-
-
-    Object.keys(data)
-    .sort(
-        (a,b)=>
-        data[b]-data[a]
-    )
-    .forEach(
-        (content)=>{
-
-
-            table.innerHTML += `
-
-            <tr>
-
-            <td>
-            ${content}
-            </td>
-
-
-            <td>
-            ${data[content]}
-            </td>
-
-
-            </tr>
-
-            `;
-
-
-        }
-    );
-
+    padding: 40px 30px;
 
 }
 
 
 
-// 실행
+/* =====================================
+   헤더
+===================================== */
 
-loadStatistics();
+
+header {
+
+    background: white;
+
+    padding: 35px;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 5px 15px rgba(0,0,0,0.08);
+
+    margin-bottom: 30px;
+
+}
+
+
+
+header h1 {
+
+    margin: 0;
+
+    font-size: 32px;
+
+    font-weight: 800;
+
+    color: #004ea2;
+
+}
+
+
+
+header p {
+
+    margin-top: 12px;
+
+    margin-bottom: 0;
+
+    font-size: 17px;
+
+    color: #666;
+
+}
+
+
+
+/* =====================================
+   요약 카드
+===================================== */
+
+
+.summary {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 25px;
+
+    margin-bottom: 30px;
+
+}
+
+
+
+.summary-card {
+
+    background: white;
+
+    padding: 30px;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 5px 15px rgba(0,0,0,0.08);
+
+}
+
+
+
+.summary-card h3 {
+
+    margin: 0;
+
+    font-size: 18px;
+
+    color: #666;
+
+}
+
+
+
+.summary-card strong {
+
+    display: inline-block;
+
+    margin-top: 15px;
+
+    font-size: 48px;
+
+    font-weight: 800;
+
+    color: #004ea2;
+
+}
+
+
+
+.summary-card span {
+
+    margin-left: 8px;
+
+    font-size: 20px;
+
+    color: #555;
+
+}
+
+
+
+/* =====================================
+   표 영역
+===================================== */
+
+
+.box {
+
+    background: white;
+
+    padding: 30px;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 5px 15px rgba(0,0,0,0.08);
+
+    margin-bottom: 30px;
+
+}
+
+
+
+.box h2 {
+
+    margin-top: 0;
+
+    margin-bottom: 20px;
+
+    font-size: 24px;
+
+    color: #222;
+
+}
+
+
+
+/* =====================================
+   테이블
+===================================== */
+
+
+table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+}
+
+
+
+thead {
+
+    background: #edf4fc;
+
+}
+
+
+
+th {
+
+    padding: 15px;
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    color: #004ea2;
+
+    text-align: center;
+
+}
+
+
+
+td {
+
+    padding: 15px;
+
+    text-align: center;
+
+    border-bottom:
+
+        1px solid #eeeeee;
+
+    font-size: 15px;
+
+}
+
+
+
+tbody tr:hover {
+
+    background: #f8fbff;
+
+}
+
+
+
+/* =====================================
+   모바일 대응
+===================================== */
+
+
+@media(max-width:700px){
+
+
+    .dashboard {
+
+        padding: 20px 15px;
+
+    }
+
+
+
+    header {
+
+        padding: 25px;
+
+    }
+
+
+
+    header h1 {
+
+        font-size: 24px;
+
+    }
+
+
+
+    header p {
+
+        font-size: 15px;
+
+    }
+
+
+
+    .summary {
+
+        grid-template-columns:
+
+            1fr;
+
+    }
+
+
+
+    .summary-card {
+
+        padding: 25px;
+
+    }
+
+
+
+    .summary-card strong {
+
+        font-size: 38px;
+
+    }
+
+
+
+    .box {
+
+        padding: 20px;
+
+        overflow-x: auto;
+
+    }
+
+
+
+    table {
+
+        min-width: 500px;
+
+    }
+
+
+}
