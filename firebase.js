@@ -48,9 +48,11 @@ const db = getFirestore(app);
 
 export async function saveUsageLog(data){
 
+    console.log("saveUsageLog 호출됨:", data);
+
     try {
 
-        await addDoc(
+        const result = await addDoc(
             collection(db,"usage_logs"),
             {
                 ...data,
@@ -60,15 +62,15 @@ export async function saveUsageLog(data){
 
 
         console.log(
-            "저장 완료",
-            data
+            "Firestore 저장 성공:",
+            result.id
         );
 
 
     } catch(error){
 
         console.error(
-            "저장 오류",
+            "Firestore 저장 오류:",
             error
         );
 
