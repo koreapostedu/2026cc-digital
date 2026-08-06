@@ -2,9 +2,9 @@
 // 관리자 통계 대시보드
 // =====================================
 
-import {
-    db
-} from "./firebase.js";
+import { db } from "./firebase.js";
+
+import { offices } from "./offices.js";
 
 
 import {
@@ -19,7 +19,7 @@ from
 
 
 // =====================================
-// 통계 데이터 불러오기
+// 통계 불러오기
 // =====================================
 
 async function loadStatistics(){
@@ -47,7 +47,18 @@ async function loadStatistics(){
 
 
 
+        // 33개 총괄국 초기화
+
         const officeCount = {};
+
+
+        Object.keys(offices).forEach(code=>{
+
+            officeCount[offices[code]] = 0;
+
+        });
+
+
 
         const contentCount = {};
 
@@ -59,7 +70,6 @@ async function loadStatistics(){
             const data = doc.data();
 
 
-
             console.log(
                 "데이터:",
                 data
@@ -67,7 +77,9 @@ async function loadStatistics(){
 
 
 
+            // ==========================
             // 방문 기록
+            // ==========================
 
             if(data.event === "visit"){
 
@@ -75,27 +87,32 @@ async function loadStatistics(){
                 totalVisit++;
 
 
-                const office =
-                    data.officeName || "미지정";
+                const officeName =
+                    data.officeName;
 
 
-                if(
-                    officeCount[office]
-                ){
+                if(officeName){
 
-                    officeCount[office]++;
+                    if(
+                        officeCount[officeName]
+                        !== undefined
+                    ){
 
-                } else {
+                        officeCount[officeName]++;
 
-                    officeCount[office] = 1;
+                    }
 
                 }
+
 
             }
 
 
 
-            // 콘텐츠 클릭
+            // ==========================
+            // 콘텐츠 이용 기록
+            // ==========================
+
 
             if(data.event === "click"){
 
@@ -103,47 +120,45 @@ async function loadStatistics(){
                 totalContent++;
 
 
-                const content =
-                    data.content || "미지정";
+                let content =
+                    data.content || "기타";
 
 
 
-                if(
-                    contentCount[content]
-                ){
+                // 기존 테스트 명칭 정리
 
-                    contentCount[content]++;
+                if(content === "campaign"){
 
-                } else {
-
-                    contentCount[content] = 1;
+                    content =
+                    "금융사기 예방 캠페인송";
 
                 }
 
-            }
 
+
+                if(contentCount[content]){
+
+                    contentCount[content]++;
+
+                }
+                else{
+
+                    contentCount[content]=1;
+
+                }
+
+
+            }
 
 
         });
 
 
 
-        console.log(
-            "방문:",
-            totalVisit
-        );
 
-
-        console.log(
-            "콘텐츠:",
-            totalContent
-        );
-
-
-
-        // ===============================
+        // =================================
         // 숫자 표시
-        // ===============================
+        // =================================
 
 
         document.getElementById(
@@ -160,9 +175,11 @@ async function loadStatistics(){
 
 
 
-        // ===============================
-        // 총괄국 표 출력
-        // ===============================
+
+
+        // =================================
+        // 총괄국 표
+        // =================================
 
 
         const officeTable =
@@ -171,7 +188,7 @@ async function loadStatistics(){
             );
 
 
-        officeTable.innerHTML = "";
+        officeTable.innerHTML="";
 
 
 
@@ -192,6 +209,7 @@ async function loadStatistics(){
                 ${officeCount[office]}
                 </td>
 
+
             </tr>
 
             `;
@@ -201,9 +219,12 @@ async function loadStatistics(){
 
 
 
-        // ===============================
-        // 콘텐츠 표 출력
-        // ===============================
+
+
+
+        // =================================
+        // 콘텐츠 표
+        // =================================
 
 
         const contentTable =
@@ -212,7 +233,7 @@ async function loadStatistics(){
             );
 
 
-        contentTable.innerHTML = "";
+        contentTable.innerHTML="";
 
 
 
@@ -247,12 +268,10 @@ async function loadStatistics(){
 
     catch(error){
 
-
         console.error(
             "통계 오류:",
             error
         );
-
 
     }
 
@@ -262,8 +281,7 @@ async function loadStatistics(){
 
 
 
-// =====================================
+
 // 실행
-// =====================================
 
 loadStatistics();
