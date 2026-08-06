@@ -60,6 +60,7 @@ async function saveLog(content){
         console.log(collection(db,"usage_logs"));
 
 console.log("addDoc 시작");
+console.log("addDoc 함수:", addDoc);
 
 const docRef = await addDoc(
             collection(db,"usage_logs"),
