@@ -795,6 +795,543 @@ if(contentTable){
 
 
 
+// =====================================
+// 상세 엑셀 다운로드
+// =====================================
+
+
+function downloadDetailExcel(){
+
+
+    console.log(
+        "상세 엑셀 다운로드 시작"
+    );
+
+
+
+    const logs =
+    filterByDate(
+        allLogs
+    );
+
+
+
+    let totalVisit = 0;
+
+    let totalContent = 0;
+
+
+
+    const monthlyData = {};
+
+    const contentData = {};
+
+
+
+
+
+
+
+    logs.forEach((data)=>{
+
+
+
+        let isTarget = false;
+
+
+
+
+        if(
+            currentOffice === "미지정"
+        ){
+
+
+            if(
+                !data.officeName ||
+                data.officeName === "미지정"
+            ){
+
+                isTarget = true;
+
+            }
+
+
+        }
+        else{
+
+
+            if(
+                data.officeName === currentOffice
+            ){
+
+                isTarget = true;
+
+            }
+
+
+        }
+
+
+
+
+
+        if(!isTarget){
+
+            return;
+
+        }
+
+
+
+
+
+
+
+        let monthKey =
+        "기타";
+
+
+
+        if(data.timestamp){
+
+
+            const date =
+            data.timestamp.toDate();
+
+
+            monthKey =
+            `${date.getFullYear()}년 ${
+            String(date.getMonth()+1)
+            .padStart(2,"0")
+            }월`;
+
+        }
+
+
+
+
+
+
+        if(!monthlyData[monthKey]){
+
+
+            monthlyData[monthKey] = {
+
+                visit:0,
+
+                click:0
+
+            };
+
+
+        }
+
+
+
+
+
+
+
+        if(data.event === "visit"){
+
+
+            totalVisit++;
+
+
+            monthlyData[monthKey]
+            .visit++;
+
+
+        }
+
+
+
+
+
+
+        if(data.event === "click"){
+
+
+            totalContent++;
+
+
+            monthlyData[monthKey]
+            .click++;
+
+
+
+
+            let content =
+            data.content || "기타";
+
+
+
+            if(content === "campaign"){
+
+
+                content =
+                "금융사기 예방 캠페인송";
+
+
+            }
+
+
+
+            if(contentData[content]){
+
+
+                contentData[content]++;
+
+
+            }
+            else{
+
+
+                contentData[content] = 1;
+
+
+            }
+
+
+
+        }
+
+
+
+    });
+
+
+
+
+    // =====================================
+    // 대상명 표시
+    // =====================================
+
+
+    let targetName =
+    currentOffice === "미지정"
+    ? "일반 접속"
+    : currentOffice + " 총괄국";
+
+
+
+
+
+
+
+    // =====================================
+    // 엑셀 데이터 생성
+    // =====================================
+
+
+
+    const summaryData = [
+
+
+        [
+            "항목",
+            "실적"
+        ],
+
+
+
+        [
+            "대상",
+            targetName
+        ],
+
+
+
+        [
+            "총 접속 건수",
+            totalVisit
+        ],
+
+
+
+        [
+            "콘텐츠 이용 건수",
+            totalContent
+        ]
+
+
+
+    ];
+
+
+
+
+
+
+
+    const monthlySheet = [
+
+
+        [
+            "월",
+            "접속 건수",
+            "콘텐츠 이용"
+        ]
+
+
+    ];
+
+
+
+
+
+    Object.keys(monthlyData)
+    .sort()
+    .forEach((month)=>{
+
+
+        monthlySheet.push([
+
+
+            month,
+
+
+            monthlyData[month].visit,
+
+
+            monthlyData[month].click
+
+
+
+        ]);
+
+
+    });
+
+
+
+
+
+
+
+
+
+    const contentSheet = [
+
+
+        [
+            "콘텐츠",
+            "이용 횟수"
+        ]
+
+
+    ];
+
+
+
+
+
+
+    Object.keys(contentData)
+    .forEach((content)=>{
+
+
+        contentSheet.push([
+
+
+            content,
+
+
+            contentData[content]
+
+
+        ]);
+
+
+
+    });
+
+
+
+
+
+
+
+
+
+    // =====================================
+    // 엑셀 생성
+    // =====================================
+
+
+
+    const workbook =
+    XLSX.utils.book_new();
+
+
+
+
+
+
+    XLSX.utils.book_append_sheet(
+
+        workbook,
+
+        XLSX.utils.aoa_to_sheet(
+            summaryData
+        ),
+
+        "운영 현황"
+
+    );
+
+
+
+
+
+
+    XLSX.utils.book_append_sheet(
+
+        workbook,
+
+        XLSX.utils.aoa_to_sheet(
+            monthlySheet
+        ),
+
+        "월별 운영 현황"
+
+    );
+
+
+
+
+
+
+    XLSX.utils.book_append_sheet(
+
+        workbook,
+
+        XLSX.utils.aoa_to_sheet(
+            contentSheet
+        ),
+
+        "콘텐츠 이용"
+
+    );
+
+
+
+
+
+
+
+
+
+    // =====================================
+    // 파일명 생성
+    // =====================================
+
+
+
+    const startDate =
+    document.getElementById(
+        "detailStartDate"
+    ).value;
+
+
+
+    const endDate =
+    document.getElementById(
+        "detailEndDate"
+    ).value;
+
+
+
+
+
+    let fileName =
+    "디지털금융체험관_";
+
+
+
+
+
+    if(currentOffice === "미지정"){
+
+
+        fileName +=
+        "일반접속";
+
+
+    }
+    else{
+
+
+        fileName +=
+        currentOffice;
+
+
+    }
+
+
+
+
+
+
+
+    fileName +=
+    "_운영현황";
+
+
+
+
+
+
+
+    if(
+        startDate &&
+        endDate
+    ){
+
+
+        fileName +=
+        `_${startDate}_${endDate}`;
+
+
+    }
+    else{
+
+
+        fileName +=
+        "_전체기간";
+
+
+    }
+
+
+
+
+
+
+
+    fileName +=
+    ".xlsx";
+
+
+
+
+
+
+
+
+
+    XLSX.writeFile(
+
+        workbook,
+
+        fileName
+
+    );
+
+
+
+}
+
 
 
 
