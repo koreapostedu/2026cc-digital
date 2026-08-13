@@ -1353,7 +1353,30 @@ document.addEventListener(
         "detailSearchBtn"
     );
 
+const excelBtn =
+document.getElementById(
+    "detailExcelBtn"
+);
 
+
+
+if(excelBtn){
+
+
+    excelBtn.addEventListener(
+        "click",
+        ()=>{
+
+
+            downloadDetailExcel();
+
+
+        }
+
+    );
+
+
+}
 
 
 
