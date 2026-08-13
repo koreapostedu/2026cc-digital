@@ -7,12 +7,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>
-우체국 디지털금융 체험관 - 총괄국 상세
+우체국 디지털금융 체험관 - 상세 운영 현황
 </title>
+
 
 <link rel="stylesheet" href="admin.css">
 
 </head>
+
 
 
 <body>
@@ -22,9 +24,14 @@
 
 
 
+
+
 <a href="admin.html" class="back-button">
 ← 전체 운영현황 보기
 </a>
+
+
+
 
 
 
@@ -39,11 +46,12 @@
 
 
 <p id="officeTitle">
-총괄국 상세 현황
+총괄국 운영 상세 현황
 </p>
 
 
 </header>
+
 
 
 
@@ -65,32 +73,71 @@
 </h2>
 
 
+
 <table>
 
 
 <tbody>
 
 
+
 <tr>
 
 
 <td>
-조회기간
+시작일
 </td>
 
 
-<td id="periodText">
-전체 기간
+<td>
+
+<input
+type="date"
+id="detailStartDate">
+
 </td>
+
+
+
+<td>
+종료일
+</td>
+
+
+<td>
+
+<input
+type="date"
+id="detailEndDate">
+
+</td>
+
+
+
+<td>
+
+<button
+id="detailSearchBtn">
+
+조회
+
+</button>
+
+
+</td>
+
 
 
 </tr>
+
 
 
 </tbody>
 
 
 </table>
+
+
 
 
 </section>
@@ -130,6 +177,7 @@
 </span>
 
 
+
 </div>
 
 
@@ -157,7 +205,10 @@
 </span>
 
 
+
 </div>
+
+
 
 
 
@@ -194,7 +245,6 @@
 
 <tr>
 
-
 <th>
 월
 </th>
@@ -222,6 +272,7 @@
 
 
 </tbody>
+
 
 
 
@@ -282,6 +333,7 @@
 
 <tbody id="detailContentTable">
 
+
 </tbody>
 
 
@@ -314,9 +366,11 @@
 
 
 
+
 <p id="detailMessage">
 
 </p>
+
 
 
 
@@ -328,7 +382,12 @@
 
 
 
+
+
 </div>
+
+
+
 
 
 
