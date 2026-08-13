@@ -1,5 +1,6 @@
 // =====================================
 // 관리자 통계 대시보드
+// 기간 조회 기능 포함 버전
 // =====================================
 
 
@@ -20,6 +21,17 @@ from
 
 
 
+
+// =====================================
+// 전체 데이터 저장
+// =====================================
+
+
+let allLogs = [];
+
+
+
+
 // =====================================
 // 통계 불러오기
 // =====================================
@@ -28,7 +40,10 @@ from
 async function loadStatistics(){
 
 
-    console.log("통계 불러오기 시작");
+
+    console.log(
+        "통계 불러오기 시작"
+    );
 
 
 
@@ -36,71 +51,31 @@ async function loadStatistics(){
 
 
 
-        const q = query(
+        const q =
+        query(
 
-            collection(db,"usage_logs"),
+            collection(
+                db,
+                "usage_logs"
+            ),
 
-            orderBy("timestamp","desc")
+            orderBy(
+                "timestamp",
+                "desc"
+            )
 
         );
 
 
 
         const snapshot =
-            await getDocs(q);
+        await getDocs(q);
 
 
 
 
 
-
-        let totalVisit = 0;
-
-        let totalContent = 0;
-
-
-
-
-        const totalOfficeCount =
-            Object.keys(offices).length;
-
-
-
-
-
-        const officeCount = {};
-
-        const contentCount = {};
-
-        const officeContentCount = {};
-
-        const participateOffice =
-            new Set();
-
-
-
-
-        // 월별 통계 저장
-
-        const monthlyCount = {};
-
-
-
-
-
-
-        Object.keys(offices)
-        .forEach(code=>{
-
-
-            officeCount[
-                offices[code]
-            ] = 0;
-
-
-        });
-
-
+        allLogs = [];
 
 
 
@@ -109,312 +84,51 @@ async function loadStatistics(){
         snapshot.forEach((doc)=>{
 
 
-            const data =
-                doc.data();
-
-
-
-
-
-            // =================================
-            // 월별 기준 생성
-            // =================================
-
-
-            let monthKey = "기타";
-
-
-
-            if(data.timestamp){
-
-
-                const date =
-                    data.timestamp.toDate();
-
-
-
-                monthKey =
-                `${date.getFullYear()}년 ${
-                String(date.getMonth()+1)
-                .padStart(2,"0")
-                }월`;
-
-
-
-            }
-
-
-
-
-
-
-
-            if(!monthlyCount[monthKey]){
-
-
-                monthlyCount[monthKey] = {
-
-                    visit:0,
-
-                    click:0
-
-                };
-
-
-            }
-
-
-
-
-
-
-
-            // =================================
-            // 방문 기록
-            // =================================
-
-
-
-            if(data.event === "visit"){
-
-
-
-                totalVisit++;
-
-                monthlyCount[monthKey].visit++;
-
-
-
-
-                const officeName =
-                    data.officeName;
-
-
-
-
-                if(
-                    officeName &&
-                    officeName !== "미지정"
-                ){
-
-
-
-                    participateOffice.add(
-                        officeName
-                    );
-
-
-
-
-                    if(
-                        officeCount[officeName]
-                        !== undefined
-                    ){
-
-
-                        officeCount[officeName]++;
-
-
-                    }
-                    else{
-
-
-                        officeCount[officeName]=1;
-
-
-                    }
-
-
-                }
-
-
-
-            }
-
-
-
-
-
-
-
-
-            // =================================
-            // 콘텐츠 이용 기록
-            // =================================
-
-
-
-            if(data.event === "click"){
-
-
-
-                totalContent++;
-
-                monthlyCount[monthKey].click++;
-
-
-
-
-
-                let content =
-                    data.content || "기타";
-
-
-
-
-
-                if(content === "campaign"){
-
-
-                    content =
-                    "금융사기 예방 캠페인송";
-
-
-                }
-
-
-
-
-
-
-                if(contentCount[content]){
-
-
-                    contentCount[content]++;
-
-
-                }
-                else{
-
-
-                    contentCount[content]=1;
-
-
-                }
-
-
-
-
-
-
-
-                const officeName =
-                    data.officeName;
-
-
-
-
-                if(
-                    officeName &&
-                    officeName !== "미지정"
-                ){
-
-
-
-                    if(
-                        !officeContentCount[officeName]
-                    ){
-
-
-                        officeContentCount[officeName]
-                        = {};
-
-                    }
-
-
-
-
-
-
-                    if(
-                        officeContentCount[officeName][content]
-                    ){
-
-
-                        officeContentCount[officeName][content]++;
-
-
-                    }
-                    else{
-
-
-                        officeContentCount[officeName][content]=1;
-
-
-                    }
-
-
-
-                }
-
-
-
-            }
-
-
-
+            allLogs.push(
+                doc.data()
+            );
 
 
         });
-// =====================================
-// 참여 현황 계산
-// =====================================
-
-
-const participateCount =
-    participateOffice.size;
-
-
-
-let participateRate = 0;
-
-
-
-if(totalOfficeCount > 0){
-
-
-    participateRate =
-    Math.round(
-        (participateCount /
-        totalOfficeCount)
-        * 100
-    );
-
-
-}
 
 
 
 
 
-
-// =====================================
-// 미참여 국 계산
-// =====================================
-
-
-const notParticipateOffice = [];
+        console.log(
+            "전체 데이터",
+            allLogs
+        );
 
 
 
-Object.values(offices)
-.forEach((office)=>{
 
 
-    if(
-        !participateOffice.has(office)
-    ){
+        // 최초 전체 기간 표시
+
+        renderStatistics(
+            allLogs
+        );
 
 
-        notParticipateOffice.push(
-            office
+
+
+    }
+
+    catch(error){
+
+
+        console.error(
+            "데이터 조회 오류:",
+            error
         );
 
 
     }
 
 
-});
+
+}
 
 
 
@@ -425,23 +139,120 @@ Object.values(offices)
 
 
 // =====================================
-// 콘텐츠 이용률 계산
+// 기간 필터
 // =====================================
 
 
-let contentRate = 0;
+function filterByDate(logs){
 
 
 
-if(totalVisit > 0){
-
-
-    contentRate =
-    Math.round(
-        (totalContent /
-        totalVisit)
-        * 100
+    const startInput =
+    document.getElementById(
+        "startDate"
     );
+
+
+
+    const endInput =
+    document.getElementById(
+        "endDate"
+    );
+
+
+
+
+
+    const startDate =
+    startInput.value;
+
+
+
+    const endDate =
+    endInput.value;
+
+
+
+
+
+    // 날짜 선택 없으면 전체
+
+    if(
+        !startDate &&
+        !endDate
+    ){
+
+        return logs;
+
+    }
+
+
+
+
+
+
+
+    return logs.filter((data)=>{
+
+
+
+        if(!data.timestamp){
+
+            return false;
+
+        }
+
+
+
+
+        const date =
+        data.timestamp
+        .toDate();
+
+
+
+
+        const current =
+        date
+        .toISOString()
+        .slice(0,10);
+
+
+
+
+
+        if(
+            startDate &&
+            current < startDate
+        ){
+
+            return false;
+
+        }
+
+
+
+
+
+        if(
+            endDate &&
+            current > endDate
+        ){
+
+            return false;
+
+        }
+
+
+
+
+
+        return true;
+
+
+
+    });
+
 
 
 }
@@ -455,39 +266,452 @@ if(totalVisit > 0){
 
 
 // =====================================
-// 상단 카드 출력
+// 통계 계산 시작
 // =====================================
 
 
+function renderStatistics(logs){
 
-document.getElementById(
-    "totalVisit"
-).innerText =
+
+
+    let totalVisit = 0;
+
+
+    let totalContent = 0;
+
+
+
+
+
+    const totalOfficeCount =
+    Object.keys(offices)
+    .length;
+
+
+
+
+
+
+    const officeCount = {};
+
+
+    const contentCount = {};
+
+
+    const officeContentCount = {};
+
+
+
+    const participateOffice =
+    new Set();
+
+
+
+
+    const monthlyCount = {};
+
+
+
+
+
+
+
+    Object.keys(offices)
+    .forEach((code)=>{
+
+
+        officeCount[
+            offices[code]
+        ] = 0;
+
+
+    });
+
+
+
+
+
+
+
+    logs.forEach((data)=>{
+
+
+
+        let monthKey =
+        "기타";
+
+
+
+
+
+        if(data.timestamp){
+
+
+
+            const date =
+            data.timestamp.toDate();
+
+
+
+
+            monthKey =
+            `${date.getFullYear()}년 ${
+            String(
+                date.getMonth()+1
+            )
+            .padStart(2,"0")
+            }월`;
+
+
+
+        }
+
+
+
+
+
+
+        if(!monthlyCount[monthKey]){
+
+
+            monthlyCount[monthKey] = {
+
+
+                visit:0,
+
+
+                click:0
+
+
+
+            };
+
+
+        }
+
+
+
+
+
+
+
+        // ==========================
+        // 방문
+        // ==========================
+
+
+        if(data.event === "visit"){
+
+
+
+            totalVisit++;
+
+
+            monthlyCount[monthKey]
+            .visit++;
+
+
+
+
+
+            const officeName =
+            data.officeName;
+
+
+
+
+
+            if(
+                officeName &&
+                officeName !== "미지정"
+            ){
+
+
+
+                participateOffice.add(
+                    officeName
+                );
+
+
+
+
+
+                if(
+                    officeCount[officeName]
+                    !== undefined
+                ){
+
+
+                    officeCount[officeName]++;
+
+
+                }
+
+
+
+            }
+
+
+
+        }
+
+                        // ==========================
+        // 콘텐츠 이용
+        // ==========================
+
+
+        if(data.event === "click"){
+
+
+
+            totalContent++;
+
+
+            monthlyCount[monthKey]
+            .click++;
+
+
+
+
+
+            let content =
+            data.content || "기타";
+
+
+
+
+
+            if(content === "campaign"){
+
+
+                content =
+                "금융사기 예방 캠페인송";
+
+
+            }
+
+
+
+
+
+
+            if(contentCount[content]){
+
+
+                contentCount[content]++;
+
+
+            }
+            else{
+
+
+                contentCount[content] = 1;
+
+
+            }
+
+
+
+
+
+
+
+            const officeName =
+            data.officeName;
+
+
+
+
+
+            if(
+                officeName &&
+                officeName !== "미지정"
+            ){
+
+
+
+                if(
+                    !officeContentCount[officeName]
+                ){
+
+
+                    officeContentCount[officeName]
+                    = {};
+
+
+                }
+
+
+
+
+
+
+                if(
+                    officeContentCount[officeName][content]
+                ){
+
+
+                    officeContentCount[officeName][content]++;
+
+
+                }
+                else{
+
+
+                    officeContentCount[officeName][content] = 1;
+
+
+                }
+
+
+
+            }
+
+
+
+        }
+
+
+
+
+
+    });
+
+
+
+
+
+
+
+
+    // =====================================
+    // 계산
+    // =====================================
+
+
+
+    const participateCount =
+    participateOffice.size;
+
+
+
+
+    let participateRate = 0;
+
+
+
+
+    if(totalOfficeCount > 0){
+
+
+        participateRate =
+        Math.round(
+            (participateCount /
+            totalOfficeCount)
+            * 100
+        );
+
+
+    }
+
+
+
+
+
+    let contentRate = 0;
+
+
+
+
+    if(totalVisit > 0){
+
+
+        contentRate =
+        Math.round(
+            (totalContent /
+            totalVisit)
+            * 100
+        );
+
+
+    }
+
+
+
+
+
+
+
+
+    const notParticipateOffice = [];
+
+
+
+
+
+    Object.values(offices)
+    .forEach((office)=>{
+
+
+        if(
+            !participateOffice.has(office)
+        ){
+
+
+            notParticipateOffice.push(
+                office
+            );
+
+
+        }
+
+
+    });
+
+
+
+
+
+
+
+
+
+    // =====================================
+    // 상단 카드
+    // =====================================
+
+
+
+    document.getElementById(
+        "totalVisit"
+    ).innerText =
     totalVisit;
 
 
 
 
-document.getElementById(
-    "totalContent"
-).innerText =
+
+    document.getElementById(
+        "totalContent"
+    ).innerText =
     totalContent;
 
 
 
 
-document.getElementById(
-    "totalOffice"
-).innerText =
+
+    document.getElementById(
+        "totalOffice"
+    ).innerText =
     `${participateCount} / ${totalOfficeCount}`;
 
 
 
 
 
-document.getElementById(
-    "contentRate"
-).innerText =
+    document.getElementById(
+        "contentRate"
+    ).innerText =
     contentRate;
 
 
@@ -498,33 +722,33 @@ document.getElementById(
 
 
 
-// =====================================
-// 참여 현황 출력
-// =====================================
+    // =====================================
+    // 참여 현황
+    // =====================================
 
 
 
-document.getElementById(
-    "totalOfficeTarget"
-).innerText =
+    document.getElementById(
+        "totalOfficeTarget"
+    ).innerText =
     `${totalOfficeCount}개`;
 
 
 
 
 
-document.getElementById(
-    "participateOfficeCount"
-).innerText =
+    document.getElementById(
+        "participateOfficeCount"
+    ).innerText =
     `${participateCount}개`;
 
 
 
 
 
-document.getElementById(
-    "participateRate"
-).innerText =
+    document.getElementById(
+        "participateRate"
+    ).innerText =
     `${participateRate}%`;
 
 
@@ -532,287 +756,124 @@ document.getElementById(
 
 
 
-const notParticipateElement =
-document.getElementById(
-    "notParticipateOffice"
-);
-
-
-
-if(
-    notParticipateOffice.length === 0
-){
-
-
-    notParticipateElement.innerText =
-    "없음";
-
-
-}
-else{
-
-
-    notParticipateElement.innerText =
-    notParticipateOffice.join(", ");
-
-
-}
+    const notElement =
+    document.getElementById(
+        "notParticipateOffice"
+    );
 
 
 
 
+    if(
+        notParticipateOffice.length === 0
+    ){
 
 
+        notElement.innerText =
+        "없음";
 
 
-
-// =====================================
-// 월별 운영 현황 출력
-// =====================================
+    }
+    else{
 
 
-
-const monthlyTable =
-document.getElementById(
-    "monthlyTable"
-);
+        notElement.innerText =
+        notParticipateOffice.join(", ");
 
 
-
-monthlyTable.innerHTML = "";
+    }
 
 
 
 
 
 
-// 최신 월 우선 정렬
-
-const monthlyKeys =
-Object.keys(monthlyCount)
-.sort((a,b)=>{
-
-
-    return b.localeCompare(a);
-
-
-});
 
 
 
+    // =====================================
+    // 월별 운영 현황
+    // =====================================
 
 
 
-monthlyKeys.forEach((month)=>{
+    const monthlyTable =
+    document.getElementById(
+        "monthlyTable"
+    );
 
 
-    monthlyTable.innerHTML += `
+
+    monthlyTable.innerHTML = "";
 
 
-    <tr>
 
 
-        <td>
+
+
+    Object.keys(monthlyCount)
+    .sort((a,b)=>{
+
+
+        return b.localeCompare(a);
+
+
+    })
+    .forEach((month)=>{
+
+
+        monthlyTable.innerHTML += `
+
+
+        <tr>
+
+
+            <td>
             ${month}
-        </td>
+            </td>
 
 
-
-        <td>
+            <td>
             ${monthlyCount[month].visit}
-        </td>
+            </td>
 
 
-
-        <td>
+            <td>
             ${monthlyCount[month].click}
-        </td>
+            </td>
 
 
+        </tr>
 
-    </tr>
 
+        `;
 
-    `;
 
+    });
+    // =====================================
+    // 총괄국별 접속 현황
+    // =====================================
 
 
-});
+    const officeTable =
+    document.getElementById(
+        "officeTable"
+    );
 
 
 
+    officeTable.innerHTML = "";
 
 
 
 
 
 
-// =====================================
-// 총괄국별 접속 현황
-// =====================================
+    Object.keys(officeCount)
+    .forEach((office)=>{
 
 
-
-const officeTable =
-document.getElementById(
-    "officeTable"
-);
-
-
-
-officeTable.innerHTML = "";
-
-
-
-
-
-
-Object.keys(officeCount)
-.forEach((office)=>{
-
-
-
-    officeTable.innerHTML += `
-
-
-    <tr>
-
-
-        <td>
-            ${office}
-        </td>
-
-
-
-        <td>
-            ${officeCount[office]}
-        </td>
-
-
-
-        <td>
-
-            <a href="office-detail.html?office=${encodeURIComponent(office)}">
-
-                상세보기
-
-            </a>
-
-
-        </td>
-
-
-
-    </tr>
-
-
-    `;
-
-
-
-});
-
-
-
-
-
-
-
-
-
-// =====================================
-// 콘텐츠별 이용 현황
-// =====================================
-
-
-
-const contentTable =
-document.getElementById(
-    "contentTable"
-);
-
-
-
-contentTable.innerHTML = "";
-
-
-
-
-
-
-Object.keys(contentCount)
-.forEach((content)=>{
-
-
-    contentTable.innerHTML += `
-
-
-    <tr>
-
-
-        <td>
-            ${content}
-        </td>
-
-
-
-        <td>
-            ${contentCount[content]}
-        </td>
-
-
-
-    </tr>
-
-
-    `;
-
-
-
-});
-
-
-
-
-
-
-
-
-
-// =====================================
-// 총괄국별 콘텐츠 이용 현황
-// =====================================
-
-
-
-const officeContentTable =
-document.getElementById(
-    "officeContentTable"
-);
-
-
-
-officeContentTable.innerHTML = "";
-
-
-
-
-
-
-
-Object.keys(officeContentCount)
-.forEach((office)=>{
-
-
-
-    Object.keys(
-        officeContentCount[office]
-    )
-    .forEach((content)=>{
-
-
-
-        officeContentTable.innerHTML += `
+        officeTable.innerHTML += `
 
 
         <tr>
@@ -825,13 +886,19 @@ Object.keys(officeContentCount)
 
 
             <td>
-                ${content}
+                ${officeCount[office]}
             </td>
 
 
 
             <td>
-                ${officeContentCount[office][content]}
+
+                <a href="office-detail.html?office=${encodeURIComponent(office)}">
+
+                    상세보기
+
+                </a>
+
             </td>
 
 
@@ -842,8 +909,208 @@ Object.keys(officeContentCount)
         `;
 
 
+    });
+
+
+
+
+
+
+
+
+
+    // =====================================
+    // 콘텐츠별 이용 현황
+    // =====================================
+
+
+
+    const contentTable =
+    document.getElementById(
+        "contentTable"
+    );
+
+
+
+    contentTable.innerHTML = "";
+
+
+
+
+
+
+    Object.keys(contentCount)
+    .forEach((content)=>{
+
+
+        contentTable.innerHTML += `
+
+
+        <tr>
+
+
+            <td>
+                ${content}
+            </td>
+
+
+
+            <td>
+                ${contentCount[content]}
+            </td>
+
+
+
+        </tr>
+
+
+        `;
+
 
     });
+
+
+
+
+
+
+
+
+
+    // =====================================
+    // 총괄국별 콘텐츠 이용 현황
+    // =====================================
+
+
+
+    const officeContentTable =
+    document.getElementById(
+        "officeContentTable"
+    );
+
+
+
+    officeContentTable.innerHTML = "";
+
+
+
+
+
+
+
+
+    Object.keys(officeContentCount)
+    .forEach((office)=>{
+
+
+
+        Object.keys(
+            officeContentCount[office]
+        )
+        .forEach((content)=>{
+
+
+
+            officeContentTable.innerHTML += `
+
+
+            <tr>
+
+
+                <td>
+                    ${office}
+                </td>
+
+
+
+                <td>
+                    ${content}
+                </td>
+
+
+
+                <td>
+                    ${officeContentCount[office][content]}
+                </td>
+
+
+
+            </tr>
+
+
+            `;
+
+
+        });
+
+
+
+    });
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// =====================================
+// 조회 버튼 이벤트
+// =====================================
+
+
+
+document.addEventListener(
+"DOMContentLoaded",
+()=>{
+
+
+
+    const searchBtn =
+    document.getElementById(
+        "searchBtn"
+    );
+
+
+
+
+
+    if(searchBtn){
+
+
+
+        searchBtn.addEventListener(
+        "click",
+        ()=>{
+
+
+
+            const filteredLogs =
+            filterByDate(
+                allLogs
+            );
+
+
+
+
+            renderStatistics(
+                filteredLogs
+            );
+
+
+
+        });
+
+
+
+    }
 
 
 
@@ -855,28 +1122,10 @@ Object.keys(officeContentCount)
 
 
 
-}
 
-catch(error){
-
-
-    console.error(
-        "통계 오류:",
-        error
-    );
-
-
-}
-
-
-
-}
-
-
-
-
-
-
+// =====================================
 // 실행
+// =====================================
+
 
 loadStatistics();
