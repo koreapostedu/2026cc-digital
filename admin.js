@@ -59,19 +59,11 @@ async function loadStatistics(){
 
 
 
-        // 전체 대상 국 수
-
         const totalOfficeCount =
             Object.keys(offices).length;
 
 
 
-
-
-
-        // =====================================
-        // 데이터 저장 공간
-        // =====================================
 
 
         const officeCount = {};
@@ -80,20 +72,12 @@ async function loadStatistics(){
 
         const officeContentCount = {};
 
-
-
-        // 실제 참여 국
-
         const participateOffice =
             new Set();
 
 
 
 
-
-
-
-        // 총괄국 초기화
 
         Object.keys(offices)
         .forEach(code=>{
@@ -112,11 +96,6 @@ async function loadStatistics(){
 
 
 
-        // =====================================
-        // 데이터 분석
-        // =====================================
-
-
         snapshot.forEach((doc)=>{
 
 
@@ -125,20 +104,9 @@ async function loadStatistics(){
 
 
 
-            console.log(
-                "데이터:",
-                data
-            );
-
-
-
-
-
-
-
-            // =================================
+            // =============================
             // 방문 기록
-            // =================================
+            // =============================
 
 
             if(data.event === "visit"){
@@ -149,20 +117,16 @@ async function loadStatistics(){
 
 
 
-
                 const officeName =
                     data.officeName;
 
 
 
 
-                // 미지정 제외
-
                 if(
                     officeName &&
                     officeName !== "미지정"
                 ){
-
 
 
                     participateOffice.add(
@@ -171,18 +135,21 @@ async function loadStatistics(){
 
 
 
-
                     if(
                         officeCount[officeName]
                         !== undefined
                     ){
 
+
                         officeCount[officeName]++;
+
 
                     }
                     else{
 
+
                         officeCount[officeName]=1;
+
 
                     }
 
@@ -201,10 +168,9 @@ async function loadStatistics(){
 
 
 
-
-            // =================================
+            // =============================
             // 콘텐츠 이용 기록
-            // =================================
+            // =============================
 
 
             if(data.event === "click"){
@@ -223,7 +189,6 @@ async function loadStatistics(){
 
 
 
-
                 if(content === "campaign"){
 
 
@@ -237,9 +202,6 @@ async function loadStatistics(){
 
 
 
-
-
-                // 콘텐츠별 집계
 
                 if(contentCount[content]){
 
@@ -260,9 +222,6 @@ async function loadStatistics(){
 
 
 
-
-
-                // 총괄국별 콘텐츠 집계
 
 
                 const officeName =
@@ -287,6 +246,7 @@ async function loadStatistics(){
                         = {};
 
                     }
+
 
 
 
@@ -320,20 +280,10 @@ async function loadStatistics(){
 
 
 
-
         });
-
-
-
-
-
-
-
-
         // =====================================
         // 참여 현황 계산
         // =====================================
-
 
 
         const participateCount =
@@ -364,11 +314,8 @@ async function loadStatistics(){
 
 
 
-        // 미참여 국 계산
-
-
         const notParticipateOffice =
-            [];
+        [];
 
 
 
@@ -400,11 +347,9 @@ async function loadStatistics(){
 
 
 
-
         // =====================================
-        // 상단 카드
+        // 상단 카드 표시
         // =====================================
-
 
 
         document.getElementById(
@@ -415,12 +360,10 @@ async function loadStatistics(){
 
 
 
-
         document.getElementById(
             "totalContent"
         ).innerText =
             totalContent;
-
 
 
 
@@ -455,13 +398,10 @@ async function loadStatistics(){
 
 
 
-
-
         document.getElementById(
             "contentRate"
         ).innerText =
             contentRate;
-
 
 
 
@@ -512,13 +452,14 @@ async function loadStatistics(){
 
 
 
+
         if(
             notParticipateOffice.length === 0
         ){
 
 
             notParticipateElement.innerText =
-                "없음";
+            "없음";
 
 
         }
@@ -526,9 +467,7 @@ async function loadStatistics(){
 
 
             notParticipateElement.innerText =
-                notParticipateOffice.join(
-                    ", "
-                );
+            notParticipateOffice.join(", ");
 
 
         }
@@ -543,6 +482,7 @@ async function loadStatistics(){
 
         // =====================================
         // 총괄국별 접속 현황
+        // + 상세보기 버튼 추가
         // =====================================
 
 
@@ -569,9 +509,11 @@ async function loadStatistics(){
 
             <tr>
 
+
                 <td>
                     ${office}
                 </td>
+
 
 
                 <td>
@@ -579,7 +521,21 @@ async function loadStatistics(){
                 </td>
 
 
+
+                <td>
+
+                    <a href="office-detail.html?office=${encodeURIComponent(office)}">
+
+                        상세보기
+
+                    </a>
+
+                </td>
+
+
+
             </tr>
+
 
             `;
 
@@ -618,9 +574,12 @@ async function loadStatistics(){
         .forEach((content)=>{
 
 
+
             contentTable.innerHTML += `
 
+
             <tr>
+
 
                 <td>
                     ${content}
@@ -634,11 +593,12 @@ async function loadStatistics(){
 
             </tr>
 
+
             `;
 
 
-        });
 
+        });
 
 
 
@@ -661,8 +621,8 @@ async function loadStatistics(){
 
 
 
-
         officeContentTable.innerHTML="";
+
 
 
 
@@ -680,6 +640,7 @@ async function loadStatistics(){
 
                 officeContentTable.innerHTML += `
 
+
                 <tr>
 
 
@@ -688,14 +649,17 @@ async function loadStatistics(){
                     </td>
 
 
+
                     <td>
                         ${content}
                     </td>
 
 
+
                     <td>
                         ${officeContentCount[office][content]}
                     </td>
+
 
 
                 </tr>
@@ -704,12 +668,12 @@ async function loadStatistics(){
                 `;
 
 
+
             });
 
 
 
         });
-
 
 
 
@@ -732,6 +696,7 @@ async function loadStatistics(){
 
 
 }
+
 
 
 
