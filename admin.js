@@ -1659,9 +1659,8 @@ async function downloadExcel(){
 }
 
 // =====================================
-// 조회 버튼
+// 조회 / 엑셀 다운로드 버튼
 // =====================================
-
 
 
 document.addEventListener(
@@ -1669,12 +1668,15 @@ document.addEventListener(
 ()=>{
 
 
+    // ==========================
+    // 조회 버튼
+    // ==========================
+
 
     const searchBtn =
     document.getElementById(
         "searchBtn"
     );
-
 
 
 
@@ -1687,17 +1689,57 @@ document.addEventListener(
         ()=>{
 
 
-
             const filteredLogs =
             filterByDate(
                 allLogs
             );
 
 
-
             renderStatistics(
                 filteredLogs
             );
+
+
+
+        });
+
+
+
+    }
+
+
+
+
+
+
+    // ==========================
+    // 엑셀 다운로드 버튼
+    // ==========================
+
+
+    const excelBtn =
+    document.getElementById(
+        "excelBtn"
+    );
+
+
+
+    if(excelBtn){
+
+
+
+        excelBtn.addEventListener(
+        "click",
+        ()=>{
+
+
+            console.log(
+                "엑셀 다운로드 버튼 클릭"
+            );
+
+
+
+            downloadExcel();
 
 
 
