@@ -51,9 +51,20 @@ async function loadStatistics(){
 
 
 
+
         let totalVisit = 0;
 
         let totalContent = 0;
+
+
+
+
+        // 전체 대상 국 수
+
+        const totalOfficeCount =
+            Object.keys(offices).length;
+
+
 
 
 
@@ -65,33 +76,36 @@ async function loadStatistics(){
 
         const officeCount = {};
 
-
-
         const contentCount = {};
-
-
 
         const officeContentCount = {};
 
 
 
-        const participateOffice = new Set();
+        // 실제 참여 국
+
+        const participateOffice =
+            new Set();
 
 
 
 
-        // =====================================
+
+
+
         // 총괄국 초기화
-        // =====================================
+
+        Object.keys(offices)
+        .forEach(code=>{
 
 
-        Object.keys(offices).forEach(code=>{
-
-
-            officeCount[offices[code]] = 0;
+            officeCount[
+                offices[code]
+            ] = 0;
 
 
         });
+
 
 
 
@@ -110,10 +124,12 @@ async function loadStatistics(){
 
 
 
+
             console.log(
                 "데이터:",
                 data
             );
+
 
 
 
@@ -139,7 +155,13 @@ async function loadStatistics(){
 
 
 
-                if(officeName){
+
+                // 미지정 제외
+
+                if(
+                    officeName &&
+                    officeName !== "미지정"
+                ){
 
 
 
@@ -155,18 +177,15 @@ async function loadStatistics(){
                         !== undefined
                     ){
 
-
                         officeCount[officeName]++;
-
 
                     }
                     else{
 
-
-                        officeCount[officeName] = 1;
-
+                        officeCount[officeName]=1;
 
                     }
+
 
 
                 }
@@ -174,6 +193,8 @@ async function loadStatistics(){
 
 
             }
+
+
 
 
 
@@ -202,7 +223,6 @@ async function loadStatistics(){
 
 
 
-                // 기존 테스트 명칭 정리
 
                 if(content === "campaign"){
 
@@ -217,7 +237,9 @@ async function loadStatistics(){
 
 
 
-                // 콘텐츠별 합계
+
+
+                // 콘텐츠별 집계
 
                 if(contentCount[content]){
 
@@ -229,7 +251,7 @@ async function loadStatistics(){
                 else{
 
 
-                    contentCount[content] = 1;
+                    contentCount[content]=1;
 
 
                 }
@@ -240,11 +262,7 @@ async function loadStatistics(){
 
 
 
-
-                // =============================
                 // 총괄국별 콘텐츠 집계
-                // =============================
-
 
 
                 const officeName =
@@ -253,7 +271,10 @@ async function loadStatistics(){
 
 
 
-                if(officeName){
+                if(
+                    officeName &&
+                    officeName !== "미지정"
+                ){
 
 
 
@@ -262,8 +283,8 @@ async function loadStatistics(){
                     ){
 
 
-                        officeContentCount[officeName] = {};
-
+                        officeContentCount[officeName]
+                        = {};
 
                     }
 
@@ -299,6 +320,7 @@ async function loadStatistics(){
 
 
 
+
         });
 
 
@@ -309,7 +331,78 @@ async function loadStatistics(){
 
 
         // =====================================
-        // 상단 카드 표시
+        // 참여 현황 계산
+        // =====================================
+
+
+
+        const participateCount =
+            participateOffice.size;
+
+
+
+        let participateRate = 0;
+
+
+
+        if(totalOfficeCount > 0){
+
+
+            participateRate =
+            Math.round(
+                (participateCount /
+                totalOfficeCount)
+                * 100
+            );
+
+
+        }
+
+
+
+
+
+
+
+        // 미참여 국 계산
+
+
+        const notParticipateOffice =
+            [];
+
+
+
+
+        Object.values(offices)
+        .forEach((office)=>{
+
+
+            if(
+                !participateOffice.has(office)
+            ){
+
+
+                notParticipateOffice.push(
+                    office
+                );
+
+
+            }
+
+
+        });
+
+
+
+
+
+
+
+
+
+
+        // =====================================
+        // 상단 카드
         // =====================================
 
 
@@ -336,24 +429,24 @@ async function loadStatistics(){
         document.getElementById(
             "totalOffice"
         ).innerText =
-            participateOffice.size;
+            `${participateCount} / ${totalOfficeCount}`;
 
 
 
 
 
 
-
-        let rate = 0;
+        let contentRate = 0;
 
 
 
         if(totalVisit > 0){
 
 
-            rate =
+            contentRate =
             Math.round(
-                (totalContent / totalVisit)
+                (totalContent /
+                totalVisit)
                 * 100
             );
 
@@ -364,11 +457,82 @@ async function loadStatistics(){
 
 
 
-
         document.getElementById(
             "contentRate"
         ).innerText =
-            rate;
+            contentRate;
+
+
+
+
+
+
+
+
+
+        // =====================================
+        // 참여 현황
+        // =====================================
+
+
+
+        document.getElementById(
+            "totalOfficeTarget"
+        ).innerText =
+            `${totalOfficeCount}개`;
+
+
+
+
+
+        document.getElementById(
+            "participateOfficeCount"
+        ).innerText =
+            `${participateCount}개`;
+
+
+
+
+
+        document.getElementById(
+            "participateRate"
+        ).innerText =
+            `${participateRate}%`;
+
+
+
+
+
+
+
+        const notParticipateElement =
+            document.getElementById(
+                "notParticipateOffice"
+            );
+
+
+
+        if(
+            notParticipateOffice.length === 0
+        ){
+
+
+            notParticipateElement.innerText =
+                "없음";
+
+
+        }
+        else{
+
+
+            notParticipateElement.innerText =
+                notParticipateOffice.join(
+                    ", "
+                );
+
+
+        }
+
 
 
 
@@ -431,7 +595,6 @@ async function loadStatistics(){
 
 
 
-
         // =====================================
         // 콘텐츠별 이용 현황
         // =====================================
@@ -445,9 +608,7 @@ async function loadStatistics(){
 
 
 
-
         contentTable.innerHTML="";
-
 
 
 
@@ -455,7 +616,6 @@ async function loadStatistics(){
 
         Object.keys(contentCount)
         .forEach((content)=>{
-
 
 
             contentTable.innerHTML += `
@@ -477,8 +637,8 @@ async function loadStatistics(){
             `;
 
 
-
         });
+
 
 
 
@@ -508,17 +668,14 @@ async function loadStatistics(){
 
 
 
-
         Object.keys(officeContentCount)
         .forEach((office)=>{
-
 
 
             Object.keys(
                 officeContentCount[office]
             )
             .forEach((content)=>{
-
 
 
                 officeContentTable.innerHTML += `
@@ -531,11 +688,9 @@ async function loadStatistics(){
                     </td>
 
 
-
                     <td>
                         ${content}
                     </td>
-
 
 
                     <td>
@@ -543,12 +698,10 @@ async function loadStatistics(){
                     </td>
 
 
-
                 </tr>
 
 
                 `;
-
 
 
             });
@@ -563,21 +716,15 @@ async function loadStatistics(){
 
 
 
-
     }
 
     catch(error){
 
 
-
         console.error(
-
             "통계 오류:",
-
             error
-
         );
-
 
 
     }
@@ -591,9 +738,6 @@ async function loadStatistics(){
 
 
 
-// =====================================
 // 실행
-// =====================================
-
 
 loadStatistics();
