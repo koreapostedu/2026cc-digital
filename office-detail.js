@@ -32,13 +32,12 @@ async function loadOfficeDetail(){
 
 
 
-
     try {
 
 
 
         // =============================
-        // URL에서 국명 가져오기
+        // URL 국명 확인
         // =============================
 
 
@@ -66,9 +65,7 @@ async function loadOfficeDetail(){
 
             return;
 
-
         }
-
 
 
 
@@ -79,7 +76,6 @@ async function loadOfficeDetail(){
         // =============================
         // 제목 표시
         // =============================
-
 
 
         document.getElementById(
@@ -93,12 +89,9 @@ async function loadOfficeDetail(){
 
 
 
-
-
         // =============================
         // Firebase 조회
         // =============================
-
 
 
         const q = query(
@@ -120,11 +113,8 @@ async function loadOfficeDetail(){
 
 
 
-
-
         const snapshot =
             await getDocs(q);
-
 
 
 
@@ -138,6 +128,9 @@ async function loadOfficeDetail(){
 
 
         const contentCount = {};
+
+        const monthlyCount = {};
+
 
 
 
@@ -157,14 +150,48 @@ async function loadOfficeDetail(){
 
 
 
-            // 방문 기록
-
-            if(
-                data.event === "visit"
-            ){
+            // =============================
+            // 월 정보 생성
+            // =============================
 
 
-                totalVisit++;
+            let monthKey =
+            "기타";
+
+
+
+            if(data.timestamp){
+
+
+                const date =
+                    data.timestamp.toDate();
+
+
+
+                monthKey =
+                `${date.getFullYear()}년 ${
+                String(date.getMonth()+1)
+                .padStart(2,"0")
+                }월`;
+
+
+
+            }
+
+
+
+
+
+            if(!monthlyCount[monthKey]){
+
+
+                monthlyCount[monthKey] = {
+
+                    visit:0,
+
+                    click:0
+
+                };
 
 
             }
@@ -174,14 +201,42 @@ async function loadOfficeDetail(){
 
 
 
-            // 콘텐츠 이용 기록
 
-            if(
-                data.event === "click"
-            ){
+
+            // =============================
+            // 방문 기록
+            // =============================
+
+
+            if(data.event === "visit"){
+
+
+                totalVisit++;
+
+                monthlyCount[monthKey].visit++;
+
+
+            }
+
+
+
+
+
+
+
+
+            // =============================
+            // 콘텐츠 이용 기록
+            // =============================
+
+
+            if(data.event === "click"){
 
 
                 totalContent++;
+
+                monthlyCount[monthKey].click++;
+
 
 
 
@@ -192,10 +247,7 @@ async function loadOfficeDetail(){
 
 
 
-
-                if(
-                    content === "campaign"
-                ){
+                if(content === "campaign"){
 
 
                     content =
@@ -208,9 +260,7 @@ async function loadOfficeDetail(){
 
 
 
-                if(
-                    contentCount[content]
-                ){
+                if(contentCount[content]){
 
 
                     contentCount[content]++;
@@ -242,7 +292,6 @@ async function loadOfficeDetail(){
 
 
 
-
         // =============================
         // 숫자 표시
         // =============================
@@ -253,7 +302,6 @@ async function loadOfficeDetail(){
             "detailVisit"
         ).innerText =
             totalVisit;
-
 
 
 
@@ -273,20 +321,90 @@ async function loadOfficeDetail(){
 
 
         // =============================
-        // 콘텐츠 표 출력
+        // 월별 운영 현황 출력
         // =============================
 
 
 
-        const table =
+        const monthlyTable =
+            document.getElementById(
+                "detailMonthlyTable"
+            );
+
+
+
+        monthlyTable.innerHTML = "";
+
+
+
+
+
+
+        Object.keys(monthlyCount)
+        .sort((a,b)=>{
+
+
+            return b.localeCompare(a);
+
+
+        })
+        .forEach((month)=>{
+
+
+
+            monthlyTable.innerHTML += `
+
+
+            <tr>
+
+
+                <td>
+                    ${month}
+                </td>
+
+
+
+                <td>
+                    ${monthlyCount[month].visit}
+                </td>
+
+
+
+                <td>
+                    ${monthlyCount[month].click}
+                </td>
+
+
+
+            </tr>
+
+
+            `;
+
+
+        });
+
+
+
+
+
+
+
+
+        // =============================
+        // 콘텐츠 이용 현황 출력
+        // =============================
+
+
+
+        const contentTable =
             document.getElementById(
                 "detailContentTable"
             );
 
 
 
-        table.innerHTML = "";
-
+        contentTable.innerHTML="";
 
 
 
@@ -298,8 +416,8 @@ async function loadOfficeDetail(){
         ){
 
 
+            contentTable.innerHTML = `
 
-            table.innerHTML = `
 
             <tr>
 
@@ -311,34 +429,35 @@ async function loadOfficeDetail(){
 
             </tr>
 
+
             `;
 
 
+
         }
-
         else{
-
 
 
             Object.keys(contentCount)
             .forEach((content)=>{
 
 
+                contentTable.innerHTML += `
 
-                table.innerHTML += `
 
                 <tr>
 
 
                     <td>
-                    ${content}
+                        ${content}
                     </td>
 
 
 
                     <td>
-                    ${contentCount[content]}
+                        ${contentCount[content]}
                     </td>
+
 
 
                 </tr>
@@ -347,11 +466,9 @@ async function loadOfficeDetail(){
                 `;
 
 
-
             });
 
 
-
         }
 
 
@@ -363,37 +480,18 @@ async function loadOfficeDetail(){
 
 
         // =============================
-        // 운영 현황 메시지
+        // 운영 현황 문구
         // =============================
 
 
 
-        const message =
-            document.getElementById(
-                "detailMessage"
-            );
+        document.getElementById(
+            "detailMessage"
+        ).innerText =
 
 
+        `${officeName} 총괄국에서 총 ${totalVisit}회의 접속과 ${totalContent}회의 콘텐츠 이용이 확인되었습니다.`;
 
-
-
-        if(
-            totalVisit === 0
-        ){
-
-
-            message.innerText =
-            "현재 해당 총괄국의 이용 기록이 없습니다.";
-
-
-        }
-        else{
-
-
-            message.innerText =
-            `${officeName} 총괄국에서 총 ${totalVisit}회의 접속과 ${totalContent}회의 콘텐츠 이용이 확인되었습니다.`;
-
-        }
 
 
 
@@ -417,7 +515,6 @@ async function loadOfficeDetail(){
 
 
 }
-
 
 
 
