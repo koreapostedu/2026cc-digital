@@ -1029,7 +1029,634 @@ if(contentTable){
 
 
 
+// =====================================
+// 엑셀 다운로드 기능
+// =====================================
 
+
+async function downloadExcel(){
+
+
+    console.log(
+        "엑셀 다운로드 시작"
+    );
+
+
+
+    // 현재 조회 조건 적용
+
+    const logs =
+    filterByDate(
+        allLogs
+    );
+
+
+
+
+    const officeCount = {};
+
+    const contentCount = {};
+
+    const monthlyCount = {};
+
+
+
+    let generalVisitCount = 0;
+
+    let totalVisit = 0;
+
+    let totalContent = 0;
+
+
+
+    const participateOffice =
+    new Set();
+
+
+
+
+
+    Object.values(offices)
+    .forEach((office)=>{
+
+
+        officeCount[office] = 0;
+
+
+    });
+
+
+
+
+
+
+    logs.forEach((data)=>{
+
+
+
+        let monthKey =
+        "기타";
+
+
+
+        if(data.timestamp){
+
+
+            const date =
+            data.timestamp.toDate();
+
+
+            monthKey =
+            `${date.getFullYear()}년 ${
+            String(date.getMonth()+1)
+            .padStart(2,"0")
+            }월`;
+
+
+        }
+
+
+
+
+
+        if(!monthlyCount[monthKey]){
+
+
+            monthlyCount[monthKey] = {
+
+                visit:0,
+
+                click:0
+
+            };
+
+
+        }
+
+
+
+
+
+
+        // 방문
+
+        if(data.event === "visit"){
+
+
+            totalVisit++;
+
+
+            monthlyCount[monthKey]
+            .visit++;
+
+
+
+
+            if(
+                data.officeName &&
+                data.officeName !== "미지정"
+            ){
+
+
+                participateOffice.add(
+                    data.officeName
+                );
+
+
+
+                if(
+                    officeCount[data.officeName]
+                    !== undefined
+                ){
+
+                    officeCount[data.officeName]++;
+
+                }
+
+
+            }
+            else{
+
+
+                generalVisitCount++;
+
+
+            }
+
+
+        }
+
+
+
+
+
+        // 콘텐츠
+
+
+        if(data.event === "click"){
+
+
+            totalContent++;
+
+
+            monthlyCount[monthKey]
+            .click++;
+
+
+
+
+            let content =
+            data.content || "기타";
+
+
+
+            if(content === "campaign"){
+
+
+                content =
+                "금융사기 예방 캠페인송";
+
+
+            }
+
+
+
+
+            if(contentCount[content]){
+
+
+                contentCount[content]++;
+
+
+            }
+            else{
+
+
+                contentCount[content] = 1;
+
+
+            }
+
+
+
+        }
+
+
+
+    });
+
+
+
+
+    const officeTotal =
+    Object.values(officeCount)
+    .reduce(
+        (sum,value)=>sum+value,
+        0
+    );
+
+
+
+
+    const participateCount =
+    participateOffice.size;
+
+
+
+    const participateRate =
+    Math.round(
+        (
+            participateCount /
+            Object.keys(offices).length
+        )
+        *100
+    );
+    // =====================================
+    // 엑셀 데이터 생성
+    // =====================================
+
+
+
+    const summaryData = [
+
+
+        ["항목","실적"],
+
+
+        ["총 접속 건수", totalVisit],
+
+
+        ["총괄국 접속", officeTotal],
+
+
+        ["일반 접속", generalVisitCount],
+
+
+        ["콘텐츠 이용 건수", totalContent],
+
+
+        [
+            "참여 총괄국",
+            `${participateCount} / ${Object.keys(offices).length}`
+        ],
+
+
+        [
+            "참여율",
+            `${participateRate}%`
+        ]
+
+
+    ];
+
+
+
+
+
+
+
+
+
+    const monthlyData = [
+
+
+        [
+            "월",
+            "접속 건수",
+            "콘텐츠 이용"
+        ]
+
+
+    ];
+
+
+
+
+
+    Object.keys(monthlyCount)
+    .sort()
+    .forEach((month)=>{
+
+
+        monthlyData.push([
+
+
+            month,
+
+
+            monthlyCount[month].visit,
+
+
+            monthlyCount[month].click
+
+
+
+        ]);
+
+
+    });
+
+
+
+
+
+
+
+
+
+    const officeData = [
+
+
+        [
+            "총괄국",
+            "접속 건수"
+        ]
+
+
+    ];
+
+
+
+
+
+    Object.keys(officeCount)
+    .forEach((office)=>{
+
+
+        if(
+            officeCount[office] > 0
+        ){
+
+
+            officeData.push([
+
+
+                office,
+
+
+                officeCount[office]
+
+
+            ]);
+
+
+        }
+
+
+    });
+
+
+
+
+
+    officeData.push([
+
+
+        "총괄국 접속 합계",
+
+
+        officeTotal
+
+
+    ]);
+
+
+
+
+
+
+
+
+
+    const generalData = [
+
+
+        [
+            "구분",
+            "접속 건수"
+        ],
+
+
+        [
+            "일반 접속",
+            generalVisitCount
+        ]
+
+
+    ];
+
+
+
+
+
+
+
+
+
+    const contentData = [
+
+
+        [
+            "콘텐츠",
+            "이용 횟수"
+        ]
+
+
+    ];
+
+
+
+
+
+    Object.keys(contentCount)
+    .forEach((content)=>{
+
+
+        contentData.push([
+
+
+            content,
+
+
+            contentCount[content]
+
+
+        ]);
+
+
+    });
+
+
+
+
+
+
+
+
+
+    // =====================================
+    // 엑셀 생성
+    // =====================================
+
+
+
+    const workbook =
+    XLSX.utils.book_new();
+
+
+
+
+
+
+    XLSX.utils.book_append_sheet(
+
+        workbook,
+
+        XLSX.utils.aoa_to_sheet(summaryData),
+
+        "전체 현황"
+
+    );
+
+
+
+
+
+    XLSX.utils.book_append_sheet(
+
+        workbook,
+
+        XLSX.utils.aoa_to_sheet(monthlyData),
+
+        "월별 운영 현황"
+
+    );
+
+
+
+
+
+
+    XLSX.utils.book_append_sheet(
+
+        workbook,
+
+        XLSX.utils.aoa_to_sheet(officeData),
+
+        "총괄국별 접속"
+
+    );
+
+
+
+
+
+
+    XLSX.utils.book_append_sheet(
+
+        workbook,
+
+        XLSX.utils.aoa_to_sheet(generalData),
+
+        "일반 접속"
+
+    );
+
+
+
+
+
+
+    XLSX.utils.book_append_sheet(
+
+        workbook,
+
+        XLSX.utils.aoa_to_sheet(contentData),
+
+        "콘텐츠 이용"
+
+    );
+
+
+
+
+
+
+
+
+
+    // =====================================
+    // 파일명 생성
+    // =====================================
+
+
+
+    const startDate =
+    document.getElementById(
+        "startDate"
+    ).value;
+
+
+
+    const endDate =
+    document.getElementById(
+        "endDate"
+    ).value;
+
+
+
+
+
+    let fileName =
+    "디지털금융체험관_운영현황";
+
+
+
+
+
+    if(
+        startDate &&
+        endDate
+    ){
+
+
+        fileName +=
+        `_${startDate}_${endDate}`;
+
+
+    }
+    else{
+
+
+        fileName +=
+        "_전체기간";
+
+
+    }
+
+
+
+
+
+    fileName += ".xlsx";
+
+
+
+
+
+
+
+    XLSX.writeFile(
+
+        workbook,
+
+        fileName
+
+    );
+
+
+
+}
 
 // =====================================
 // 조회 버튼
