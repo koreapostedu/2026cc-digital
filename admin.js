@@ -2,6 +2,7 @@
 // 관리자 통계 대시보드
 // =====================================
 
+
 import { db } from "./firebase.js";
 
 import { offices } from "./offices.js";
@@ -18,9 +19,11 @@ from
 
 
 
+
 // =====================================
 // 통계 불러오기
 // =====================================
+
 
 async function loadStatistics(){
 
@@ -28,16 +31,23 @@ async function loadStatistics(){
     console.log("통계 불러오기 시작");
 
 
+
     try {
 
 
+
         const q = query(
+
             collection(db,"usage_logs"),
+
             orderBy("timestamp","desc")
+
         );
 
 
+
         const snapshot = await getDocs(q);
+
 
 
 
@@ -47,16 +57,13 @@ async function loadStatistics(){
 
 
 
-        // 33개 총괄국 초기화
+
+        // =====================================
+        // 데이터 저장 공간
+        // =====================================
+
 
         const officeCount = {};
-
-
-        Object.keys(offices).forEach(code=>{
-
-            officeCount[offices[code]] = 0;
-
-        });
 
 
 
@@ -64,10 +71,43 @@ async function loadStatistics(){
 
 
 
+        const officeContentCount = {};
+
+
+
+        const participateOffice = new Set();
+
+
+
+
+        // =====================================
+        // 총괄국 초기화
+        // =====================================
+
+
+        Object.keys(offices).forEach(code=>{
+
+
+            officeCount[offices[code]] = 0;
+
+
+        });
+
+
+
+
+
+
+        // =====================================
+        // 데이터 분석
+        // =====================================
+
+
         snapshot.forEach((doc)=>{
 
 
             const data = doc.data();
+
 
 
             console.log(
@@ -77,47 +117,82 @@ async function loadStatistics(){
 
 
 
-            // ==========================
+
+
+
+            // =================================
             // 방문 기록
-            // ==========================
+            // =================================
+
 
             if(data.event === "visit"){
 
 
+
                 totalVisit++;
+
+
 
 
                 const officeName =
                     data.officeName;
 
 
+
                 if(officeName){
+
+
+
+                    participateOffice.add(
+                        officeName
+                    );
+
+
+
 
                     if(
                         officeCount[officeName]
                         !== undefined
                     ){
 
+
                         officeCount[officeName]++;
+
+
+                    }
+                    else{
+
+
+                        officeCount[officeName] = 1;
+
 
                     }
 
+
                 }
+
 
 
             }
 
 
 
-            // ==========================
+
+
+
+
+            // =================================
             // 콘텐츠 이용 기록
-            // ==========================
+            // =================================
 
 
             if(data.event === "click"){
 
 
+
                 totalContent++;
+
+
 
 
                 let content =
@@ -125,30 +200,103 @@ async function loadStatistics(){
 
 
 
+
+
                 // 기존 테스트 명칭 정리
 
                 if(content === "campaign"){
 
+
                     content =
                     "금융사기 예방 캠페인송";
+
 
                 }
 
 
 
+
+
+                // 콘텐츠별 합계
+
                 if(contentCount[content]){
 
+
                     contentCount[content]++;
+
 
                 }
                 else{
 
-                    contentCount[content]=1;
+
+                    contentCount[content] = 1;
+
 
                 }
 
 
+
+
+
+
+
+
+                // =============================
+                // 총괄국별 콘텐츠 집계
+                // =============================
+
+
+
+                const officeName =
+                    data.officeName;
+
+
+
+
+                if(officeName){
+
+
+
+                    if(
+                        !officeContentCount[officeName]
+                    ){
+
+
+                        officeContentCount[officeName] = {};
+
+
+                    }
+
+
+
+
+
+                    if(
+                        officeContentCount[officeName][content]
+                    ){
+
+
+                        officeContentCount[officeName][content]++;
+
+
+                    }
+                    else{
+
+
+                        officeContentCount[officeName][content]=1;
+
+
+                    }
+
+
+
+                }
+
+
+
             }
+
+
 
 
         });
@@ -156,15 +304,22 @@ async function loadStatistics(){
 
 
 
-        // =================================
-        // 숫자 표시
-        // =================================
+
+
+
+
+        // =====================================
+        // 상단 카드 표시
+        // =====================================
+
 
 
         document.getElementById(
             "totalVisit"
         ).innerText =
             totalVisit;
+
+
 
 
 
@@ -177,9 +332,55 @@ async function loadStatistics(){
 
 
 
-        // =================================
-        // 총괄국 표
-        // =================================
+
+        document.getElementById(
+            "totalOffice"
+        ).innerText =
+            participateOffice.size;
+
+
+
+
+
+
+
+        let rate = 0;
+
+
+
+        if(totalVisit > 0){
+
+
+            rate =
+            Math.round(
+                (totalContent / totalVisit)
+                * 100
+            );
+
+
+        }
+
+
+
+
+
+
+        document.getElementById(
+            "contentRate"
+        ).innerText =
+            rate;
+
+
+
+
+
+
+
+
+        // =====================================
+        // 총괄국별 접속 현황
+        // =====================================
+
 
 
         const officeTable =
@@ -188,7 +389,10 @@ async function loadStatistics(){
             );
 
 
+
         officeTable.innerHTML="";
+
+
 
 
 
@@ -196,23 +400,25 @@ async function loadStatistics(){
         .forEach((office)=>{
 
 
+
             officeTable.innerHTML += `
 
             <tr>
 
                 <td>
-                ${office}
+                    ${office}
                 </td>
 
 
                 <td>
-                ${officeCount[office]}
+                    ${officeCount[office]}
                 </td>
 
 
             </tr>
 
             `;
+
 
 
         });
@@ -222,9 +428,14 @@ async function loadStatistics(){
 
 
 
-        // =================================
-        // 콘텐츠 표
-        // =================================
+
+
+
+
+        // =====================================
+        // 콘텐츠별 이용 현황
+        // =====================================
+
 
 
         const contentTable =
@@ -233,7 +444,12 @@ async function loadStatistics(){
             );
 
 
+
+
         contentTable.innerHTML="";
+
+
+
 
 
 
@@ -241,17 +457,18 @@ async function loadStatistics(){
         .forEach((content)=>{
 
 
+
             contentTable.innerHTML += `
 
             <tr>
 
                 <td>
-                ${content}
+                    ${content}
                 </td>
 
 
                 <td>
-                ${contentCount[content]}
+                    ${contentCount[content]}
                 </td>
 
 
@@ -260,7 +477,90 @@ async function loadStatistics(){
             `;
 
 
+
         });
+
+
+
+
+
+
+
+
+
+        // =====================================
+        // 총괄국별 콘텐츠 이용 현황
+        // =====================================
+
+
+
+        const officeContentTable =
+            document.getElementById(
+                "officeContentTable"
+            );
+
+
+
+
+        officeContentTable.innerHTML="";
+
+
+
+
+
+
+        Object.keys(officeContentCount)
+        .forEach((office)=>{
+
+
+
+            Object.keys(
+                officeContentCount[office]
+            )
+            .forEach((content)=>{
+
+
+
+                officeContentTable.innerHTML += `
+
+                <tr>
+
+
+                    <td>
+                        ${office}
+                    </td>
+
+
+
+                    <td>
+                        ${content}
+                    </td>
+
+
+
+                    <td>
+                        ${officeContentCount[office][content]}
+                    </td>
+
+
+
+                </tr>
+
+
+                `;
+
+
+
+            });
+
+
+
+        });
+
+
+
+
+
 
 
 
@@ -268,12 +568,20 @@ async function loadStatistics(){
 
     catch(error){
 
+
+
         console.error(
+
             "통계 오류:",
+
             error
+
         );
 
+
+
     }
+
 
 
 }
@@ -282,6 +590,10 @@ async function loadStatistics(){
 
 
 
+
+// =====================================
 // 실행
+// =====================================
+
 
 loadStatistics();
