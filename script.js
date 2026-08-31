@@ -150,7 +150,7 @@ window.openBanking = function(){
 
 
     window.open(
-        "https://www.posid.or.kr/menu_v2.html",
+        "https://postbank-emulator.vercel.app/",
         "_blank"
     );
 
